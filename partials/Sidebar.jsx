@@ -8,11 +8,15 @@ import { RxDashboard } from "react-icons/rx";
 import { TfiAngleDown } from "react-icons/tfi";
 import { MdRestaurantMenu, MdPermContactCalendar } from "react-icons/md";
 import { RiGalleryFill } from "react-icons/ri";
+import { useSelector } from "react-redux";
+import { categoryGet } from "../api/category";
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const location = useRouter();
-  console.log(location);
-  const { pathname } = location;
+  const [pathname, setPathName] = useState(location.pathname);
+  const [category, setCategory] = useState([]);
+  const isLoad = useSelector((state) => state.loader.isLoad);
+  const token = useSelector((state) => state.auth.token);
 
   const trigger = useRef(null);
   const sidebar = useRef(null);
@@ -21,6 +25,18 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const [sidebarExpanded, setSidebarExpanded] = useState(
     storedSidebarExpanded === null ? false : storedSidebarExpanded === "true"
   );
+
+  useEffect(() => {
+    setPathName(location.pathname);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    (async () => {
+      const res = await categoryGet(token);
+      // console.log(res.data, '<---');
+      setCategory(res.data);
+    })();
+  }, [isLoad, token]);
 
   // close on click outside
   useEffect(() => {
@@ -76,7 +92,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         }`}
       >
         {/* Sidebar header */}
-        <div className="flex justify-between mb-10 pr-3 sm:px-2">
+        <div className="flex justify-between mb-10">
           {/* Close button */}
           <button
             ref={trigger}
@@ -96,44 +112,6 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           </button>
           {/* Logo */}
           <Link href="/" className="block relative w-12 h-12">
-            {/* <svg width="32" height="32" viewBox="0 0 32 32">
-              <defs>
-                <linearGradient
-                  x1="28.538%"
-                  y1="20.229%"
-                  x2="100%"
-                  y2="108.156%"
-                  id="logo-a"
-                >
-                  <stop stopColor="#A5B4FC" stopOpacity="0" offset="0%" />
-                  <stop stopColor="#A5B4FC" offset="100%" />
-                </linearGradient>
-                <linearGradient
-                  x1="88.638%"
-                  y1="29.267%"
-                  x2="22.42%"
-                  y2="100%"
-                  id="logo-b"
-                >
-                  <stop stopColor="#38BDF8" stopOpacity="0" offset="0%" />
-                  <stop stopColor="#38BDF8" offset="100%" />
-                </linearGradient>
-              </defs>
-              <rect fill="#6366F1" width="32" height="32" rx="16" />
-              <path
-                d="M18.277.16C26.035 1.267 32 7.938 32 16c0 8.837-7.163 16-16 16a15.937 15.937 0 01-10.426-3.863L18.277.161z"
-                fill="#4F46E5"
-              />
-              <path
-                d="M7.404 2.503l18.339 26.19A15.93 15.93 0 0116 32C7.163 32 0 24.837 0 16 0 10.327 2.952 5.344 7.404 2.503z"
-                fill="url(#logo-a)"
-              />
-              <path
-                d="M2.223 24.14L29.777 7.86A15.926 15.926 0 0132 16c0 8.837-7.163 16-16 16-5.864 0-10.991-3.154-13.777-7.86z"
-                fill="url(#logo-b)"
-              />
-            </svg> */}
-
             <Image
               src="/images/logo.png"
               alt="logo"
@@ -163,13 +141,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
               <li
                 className={`px-3 py-2 rounded-sm mb-0.5 last:mb-0 ${
-                  pathname.includes("/") && "bg-slate-900"
+                  pathname === "/" && "bg-slate-900"
                 }`}
               >
                 <Link
                   href="/"
                   className={`block text-slate-200 hover:text-white truncate transition duration-150 ${
-                    pathname.includes("/") && "hover:text-slate-200"
+                    pathname === "/" && "hover:text-slate-200"
                   }`}
                 >
                   <div className="flex items-center">
@@ -180,15 +158,14 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   </div>
                 </Link>
               </li>
+
               {/* Home */}
-              <SidebarLinkGroup
-                activecondition={pathname.includes("ecommerce")}
-              >
+              <SidebarLinkGroup activecondition={pathname.includes("/home")}>
                 {(handleClick, open) => {
                   return (
                     <React.Fragment>
                       <a
-                        href="#0"
+                        href="#"
                         className={`block text-slate-200 hover:text-white truncate transition duration-150 ${
                           pathname.includes("/home") && "hover:text-slate-200"
                         }`}
@@ -217,62 +194,22 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                         <ul className={`pl-9 mt-1 ${!open && "hidden"}`}>
                           <li className="mb-1 last:mb-0">
                             <Link
-                              href="/"
+                              href="/home/banner-uploads"
                               className="block text-slate-400 hover:text-slate-200 transition duration-150 truncate"
                             >
                               <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                Customers
+                                Banner Uploads
                               </span>
                             </Link>
                           </li>
-                        </ul>
-                      </div>
-                    </React.Fragment>
-                  );
-                }}
-              </SidebarLinkGroup>
 
-              <SidebarLinkGroup
-                activecondition={pathname.includes("ecommerce")}
-              >
-                {(handleClick, open) => {
-                  return (
-                    <React.Fragment>
-                      <a
-                        href="#0"
-                        className={`block text-slate-200 hover:text-white truncate transition duration-150 ${
-                          pathname.includes("/home") && "hover:text-slate-200"
-                        }`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          sidebarExpanded
-                            ? handleClick()
-                            : setSidebarExpanded(true);
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <HiOutlineUserGroup className="shrink-0 h-6 w-6" />
-                            <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                              About Us
-                            </span>
-                          </div>
-                          <div className="flex shrink-0 ml-2">
-                            <TfiAngleDown
-                              className={`${open && "rotate-180"}`}
-                            />
-                          </div>
-                        </div>
-                      </a>
-                      <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                        <ul className={`pl-9 mt-1 ${!open && "hidden"}`}>
                           <li className="mb-1 last:mb-0">
                             <Link
-                              href="/"
+                              href="/home/testimonials"
                               className="block text-slate-400 hover:text-slate-200 transition duration-150 truncate"
                             >
                               <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                Customers
+                                Testimonials
                               </span>
                             </Link>
                           </li>
@@ -283,16 +220,36 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 }}
               </SidebarLinkGroup>
 
-              <SidebarLinkGroup
-                activecondition={pathname.includes("ecommerce")}
+              {/* About */}
+              <li
+                className={`px-3 py-2 rounded-sm mb-0.5 last:mb-0 ${
+                  pathname === "/about" && "bg-slate-900"
+                }`}
               >
+                <Link
+                  href="/about"
+                  className={`block text-slate-200 hover:text-white truncate transition duration-150 ${
+                    pathname === "/about" && "hover:text-slate-200"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <HiOutlineUserGroup className="shrink-0 h-6 w-6" />
+                    <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                      About
+                    </span>
+                  </div>
+                </Link>
+              </li>
+
+              {/* Menu */}
+              <SidebarLinkGroup activecondition={pathname.includes("/menu")}>
                 {(handleClick, open) => {
                   return (
                     <React.Fragment>
                       <a
                         href="#0"
                         className={`block text-slate-200 hover:text-white truncate transition duration-150 ${
-                          pathname.includes("/home") && "hover:text-slate-200"
+                          pathname.includes("/menu") && "hover:text-slate-200"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -317,16 +274,36 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
                         <ul className={`pl-9 mt-1 ${!open && "hidden"}`}>
-                          <li className="mb-1 last:mb-0">
-                            <Link
-                              href="/"
-                              className="block text-slate-400 hover:text-slate-200 transition duration-150 truncate"
-                            >
-                              <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                Customers
-                              </span>
-                            </Link>
-                          </li>
+                          {category && category?.length > 0 ? (
+                            category.map((item, index) => {
+                              return (
+                                <li
+                                  key={new Date().getTime() + index}
+                                  className="mb-1 last:mb-0"
+                                >
+                                  <Link
+                                    href={`/menu/${item.name}`}
+                                    className="block text-slate-400 hover:text-slate-200 transition duration-150 truncate"
+                                  >
+                                    <span className="text-sm font-medium capitalize lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                                      {item.name}
+                                    </span>
+                                  </Link>
+                                </li>
+                              );
+                            })
+                          ) : (
+                            <li className="mb-1 last:mb-0">
+                              <Link
+                                href={`/menu/create`}
+                                className="block text-slate-400 hover:text-slate-200 transition duration-150 truncate"
+                              >
+                                <span className="text-sm font-medium capitalize lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                                  Create Menu
+                                </span>
+                              </Link>
+                            </li>
+                          )}
                         </ul>
                       </div>
                     </React.Fragment>
@@ -334,13 +311,14 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 }}
               </SidebarLinkGroup>
 
+              {/* Gallery */}
               <li
                 className={`px-3 py-2 rounded-sm mb-0.5 last:mb-0 ${
                   pathname.includes("/gallery") && "bg-slate-900"
                 }`}
               >
                 <Link
-                  href="/"
+                  href="/gallery"
                   className={`block text-slate-200 hover:text-white truncate transition duration-150 ${
                     pathname.includes("/gallery") && "hover:text-slate-200"
                   }`}
@@ -354,13 +332,14 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 </Link>
               </li>
 
+              {/* Contacts */}
               <li
                 className={`px-3 py-2 rounded-sm mb-0.5 last:mb-0 ${
                   pathname.includes("/contact") && "bg-slate-900"
                 }`}
               >
                 <Link
-                  href="/"
+                  href="/contact"
                   className={`block text-slate-200 hover:text-white truncate transition duration-150 ${
                     pathname.includes("/contact") && "hover:text-slate-200"
                   }`}

@@ -1,12 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link } from "next/link";
 import Transition from "../../utils/Transition";
+import { FaUserCircle } from "react-icons/fa";
+import { removeToken } from "../../redux/features/AuthSlice";
+import { useDispatch } from "react-redux";
+import { useRouter } from "next/router";
+
 function UserMenu() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
+  const dispatch = useDispatch();
+  const router = useRouter();
   const trigger = useRef(null);
   const dropdown = useRef(null);
-
+  const handleLogout = () => {
+    dispatch(removeToken());
+    setDropdownOpen(!dropdownOpen);
+    router.push("/login");
+  };
   // close on click outside
   useEffect(() => {
     const clickHandler = ({ target }) => {
@@ -41,16 +50,10 @@ function UserMenu() {
         onClick={() => setDropdownOpen(!dropdownOpen)}
         aria-expanded={dropdownOpen}
       >
-        <img
-          className="w-8 h-8 rounded-full"
-          src={'../../images/user-avatar-32.png'}
-          width="32"
-          height="32"
-          alt="User"
-        />
+        <FaUserCircle className="w-8 h-8 rounded-full" />
         <div className="flex items-center truncate">
           <span className="truncate ml-2 text-sm font-medium group-hover:text-slate-800">
-            Acme Inc.
+            Admin
           </span>
           <svg
             className="w-3 h-3 shrink-0 ml-1 fill-current text-slate-400"
@@ -77,27 +80,17 @@ function UserMenu() {
           onBlur={() => setDropdownOpen(false)}
         >
           <div className="pt-0.5 pb-2 px-3 mb-1 border-b border-slate-200">
-            <div className="font-medium text-slate-800">Acme Inc.</div>
+            <div className="font-medium text-slate-800">Admin</div>
             <div className="text-xs text-slate-500 italic">Administrator</div>
           </div>
           <ul>
             <li>
-              <a
-                className="font-medium text-sm text-indigo-500 hover:text-indigo-600 flex items-center py-1 px-3"
-                href="#"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-              >
-                Settings
-              </a>
-            </li>
-            <li>
-              <a
-                className="font-medium text-sm text-indigo-500 hover:text-indigo-600 flex items-center py-1 px-3"
-                href="#"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
+              <button
+                className="font-medium text-sm text-red-400 hover:text-red-600 flex items-center py-1 px-3"
+                onClick={handleLogout}
               >
                 Sign Out
-              </a>
+              </button>
             </li>
           </ul>
         </div>
