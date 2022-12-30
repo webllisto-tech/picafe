@@ -6,7 +6,7 @@ import rootReducer from "./rootReducer";
 const persistConfig = {
   key: "picafe_dashboard",
   storage,
-  blacklist: ['loader']
+  blacklist: ["loader", "category"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

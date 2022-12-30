@@ -1,9 +1,9 @@
 import axios from "axios";
 const apiUrl = process.env.NEXT_PUBLIC_APIURL;
 
-export const testimonialPost = async (data, token) => {
+export const menuItemPost = async (data, token) => {
   try {
-    const res = await axios.post(`${apiUrl}/review/`, data, {
+    const res = await axios.post(`${apiUrl}/specialmenu/`, data, {
       headers: {
         "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${token}`,
@@ -16,9 +16,13 @@ export const testimonialPost = async (data, token) => {
   }
 };
 
-export const testimonialGet = async () => {
+export const menuItemGet = async (id, token) => {
   try {
-    const res = await axios.get(`${apiUrl}/review/`);
+    const res = await axios.get(`${apiUrl}/specialmenu-category/${id}/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return res;
   } catch (error) {
     return error;
@@ -30,8 +34,14 @@ const changeUrlToByte = async (url) => {
   let file;
   const data = await res.blob();
   if (data.type === "image/png") {
-    file = new File([data], "image.webp", {
+    file = new File([data], "image.png", {
       type: "image/png",
+    });
+  }
+
+  if (data.type === "application/octet-stream") {
+    file = new File([data], "image.webp", {
+      type: "application/octet-stream",
     });
   }
 
@@ -55,26 +65,22 @@ const changeUrlToByte = async (url) => {
   return file;
 };
 
-export const testimonialGetSingle = async (id, token) => {
+export const menuGetSingle = async (id) => {
   try {
-    const res = await axios.get(`${apiUrl}/review/${id}/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
+    const res = await axios.get(`${apiUrl}/specialmenu/${id}/`);
     return {
       ...res.data,
       image: await changeUrlToByte(`${apiUrl}${res.data.image}`),
+      old_img: res.data.image,
     };
   } catch (error) {
     return error;
   }
 };
 
-export const testimonialGetSingleUpdate = async (id, data, token) => {
+export const menuGetSingleUpdate = async (id, data, token) => {
   try {
-    const res = await axios.put(`${apiUrl}/review/${id}/`, data, {
+    const res = await axios.put(`${apiUrl}/specialmenu/${id}/`, data, {
       headers: {
         "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${token}`,
@@ -90,9 +96,9 @@ export const testimonialGetSingleUpdate = async (id, data, token) => {
   }
 };
 
-export const testimonialDelete = async (id, token) => {
+export const menuDelete = async (id, token) => {
   try {
-    const res = await axios.delete(`${apiUrl}/review/${id}/`, {
+    const res = await axios.delete(`${apiUrl}/specialmenu/${id}/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

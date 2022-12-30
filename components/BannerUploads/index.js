@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { CgAdd } from "react-icons/cg";
 import Card from "../Card";
 import ModalComponent from "../Modal";
-import { FileInput } from "flowbite-react";
+import { FileInput, Spinner } from "flowbite-react";
 import { bannerDelete, bannerGet, bannerPost } from "../../api/bannerupload";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsLoad } from "../../redux/features/LoaderSlice";
@@ -45,10 +45,10 @@ const BannerUploads = () => {
       dispatch(setIsLoad(true));
       const res = await bannerDelete(id, token);
       if (res) {
-        setIsShow(false)
+        setIsShow(false);
         toast.success("Deleted Successfully!");
+        dispatch(setIsLoad(false));
       }
-      dispatch(setIsLoad(false));
     } catch (error) {
       console.log(error);
     }
@@ -95,8 +95,8 @@ const BannerUploads = () => {
           </ModalComponent>
         </div>
 
-        <div className="banner_uploads_container px-4 sm:px-6 lg:px-8 grid grid-cols-12 gap-8">
-          Loading...
+        <div className="banner_uploads_container px-4 text-center sm:px-6 lg:px-8">
+          <Spinner color="failure" />
         </div>
       </div>
     );
@@ -119,14 +119,15 @@ const BannerUploads = () => {
           onClose={setIsShowUploadModal}
           onSubmit={handleBannerUpload}
           heading="Upload file"
+          isLoading={isLoad}
         >
           <div id="fileUpload">
             <FileInput
               id="file"
               name="image"
               onChange={handleFile}
-              accept=".jpg,.webp,.jpeg,.mp4,.mpeg,.mov,.avi"
-              helperText="Allowed Files .jpg,.webp,.jpeg,.mp4,.mpeg,.mov,.avi"
+              accept=".jpg,.png,.webp,.jpeg,.mp4,.mpeg,.mov,.avi"
+              helperText="Allowed Files .jpg,.png,.webp,.jpeg,.mp4,.mpeg,.mov,.avi"
             />
           </div>
         </ModalComponent>

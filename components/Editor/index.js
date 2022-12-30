@@ -2,16 +2,16 @@ import React, { useLayoutEffect, useRef, useState } from "react";
 
 const Editor = ({ html, setHtml }) => {
   const editor = useRef();
-  const [isLoad, setIsLoad] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { CKEditor, ClassicEditor } = editor.current || {};
 
   useLayoutEffect(() => {
     editor.current = {
       CKEditor: require("@ckeditor/ckeditor5-react").CKEditor,
-      ClassicEditor: require("@ckeditor/ckeditor5-build-classic"),
+      ClassicEditor: require("../../utils/ckeditor"),
     };
 
-    setIsLoad(true);
+    setIsLoading(true);
 
     return () => {
       editor.current = {
@@ -23,7 +23,7 @@ const Editor = ({ html, setHtml }) => {
 
   return (
     <div className="editor_wrp w-full">
-      {isLoad ? (
+      {isLoading && CKEditor && ClassicEditor ? (
         <CKEditor
           editor={ClassicEditor}
           data={html}

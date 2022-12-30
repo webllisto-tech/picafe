@@ -11,7 +11,7 @@ export const aboutPost = async (data, token) => {
 
     return res;
   } catch (error) {
-    return error;
+    return new Error(error);
   }
 };
 
@@ -26,6 +26,6 @@ export const aboutGet = async (token) => {
 
     return res;
   } catch (error) {
-    return error;
+    return error.response;
   }
 };

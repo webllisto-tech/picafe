@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { aboutGet, aboutPost } from "../api/about";
 import Editor from "../components/Editor";
 import { toast } from "react-toastify";
+import { useRouter } from "next/router";
+import { removeToken } from "../redux/features/AuthSlice";
 
 const About = () => {
   const [aboutus, setAboutus] = useState("");
   const token = useSelector((state) => state.auth.token);
-
+  const router = useRouter();
+  const dispatch = useDispatch();
   const handleAboutPost = async () => {
     try {
-      console.log(aboutPost({ about_us: aboutus }, token));
-      toast.promise(aboutPost({ about_us: aboutus }, token), {
-        pending: "Wait",
-        error: "something went wrong",
-        success: "Updated",
-      });
-      // const res = await aboutPost({ about_us: aboutus }, token);
+      const res = await aboutPost({ about_us: aboutus }, token);
+      if (res.status === 201) {
+        toast.success("Successfully Updatated!");
+      }
     } catch (error) {
       console.log(error);
     }
@@ -26,13 +26,15 @@ const About = () => {
     (async () => {
       try {
         const res = await aboutGet(token);
-        console.log(res);
-        setAboutus(res.data.about_us);
+
+        if (res.data) {
+          setAboutus(res.data.about_us);
+        }
       } catch (error) {
         console.log(error);
       }
     })();
-  }, []);
+  }, [token, dispatch, router]);
 
   return (
     <div className="about_wrp px-4">

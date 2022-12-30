@@ -13,15 +13,15 @@ const ModalComponent = ({
   deleteId,
   isLoading,
 }) => {
-  console.log("Modal Map");
   return (
     <>
       <Modal
         popup={popup}
         show={isShow}
         onClose={() => onClose((prev) => !prev)}
+        className="md:h-[unset]"
       >
-        <Modal.Header>{heading ? heading : ""}</Modal.Header>
+        <Modal.Header>{heading && !popup ? heading : ""}</Modal.Header>
 
         <Modal.Body>
           {popup ? (

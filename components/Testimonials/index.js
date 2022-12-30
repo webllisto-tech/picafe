@@ -2,10 +2,20 @@ import React, { useEffect, useState } from "react";
 import { CgAdd } from "react-icons/cg";
 import Card from "../Card";
 import ModalComponent from "../Modal";
-import { TextInput, Label, FileInput, Textarea, Rating } from "flowbite-react";
+import {
+  TextInput,
+  Label,
+  FileInput,
+  Textarea,
+  Rating,
+  Spinner,
+} from "flowbite-react";
+
 import {
   testimonialDelete,
   testimonialGet,
+  testimonialGetSingle,
+  testimonialGetSingleUpdate,
   testimonialPost,
 } from "../../api/testimonialupload";
 import { useSelector, useDispatch } from "react-redux";
@@ -14,7 +24,7 @@ import { setIsLoad } from "../../redux/features/LoaderSlice";
 const Testimonials = () => {
   const [isShowTestimonialModal, setIsShowTestimonialModal] = useState(false);
   const [testimonialData, setTestimonialData] = useState({ rating: 0 });
-  const [testimonialData1, setTestimonialData1] = useState({ rating: 0 });
+
   const [testimonialGetData, setTestimonialGetData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeItemId, setActiveItemId] = useState("");
@@ -69,8 +79,10 @@ const Testimonials = () => {
       setIsLoading(true);
       dispatch(setIsLoad(true));
       const res = await testimonialDelete(id, token);
+      console.log(res);
+
       if (res) {
-        isShow(false)
+        setIsShow(false);
         dispatch(setIsLoad(false));
         setIsLoading(false);
       }
@@ -79,7 +91,31 @@ const Testimonials = () => {
     }
   };
 
-  const handleUpdate = () => {};
+  const handleUpdate = async () => {
+    try {
+      setIsLoading(true);
+      dispatch(setIsLoad(true));
+      const res = await testimonialGetSingleUpdate(
+        testimonialData.id,
+        testimonialData,
+        token
+      );
+      if (res) {
+        dispatch(setIsLoad(false));
+        setIsLoading(false);
+        setIsShow(false);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleGetSingleItem = async (id) => {
+    setIsLoading(true);
+    const res = await testimonialGetSingle(id, token);
+    setTestimonialData(res);
+    setIsLoading(false);
+  };
 
   useEffect(() => {
     (async () => {
@@ -106,8 +142,8 @@ const Testimonials = () => {
           </div>
         </div>
 
-        <div className="banner_uploads_container px-4 sm:px-6 lg:px-8 grid grid-cols-12 gap-8">
-          Loading...
+        <div className="banner_uploads_container px-4 sm:px-6 lg:px-8 text-center">
+          <Spinner color="failure" />
         </div>
       </>
     );
@@ -126,6 +162,7 @@ const Testimonials = () => {
         </button>
       </div>
 
+{/* Upload Testimonials Modal */}
       <ModalComponent
         popup={false}
         isShow={isShowTestimonialModal}
@@ -222,7 +259,7 @@ const Testimonials = () => {
       </ModalComponent>
 
       <div className="banner_uploads_container px-4 sm:px-6 lg:px-8 grid grid-cols-12 gap-8">
-        {testimonialGetData.length > 0 ? (
+        {testimonialGetData?.length > 0 ? (
           testimonialGetData.map((item, index) => {
             return (
               <>
@@ -233,106 +270,17 @@ const Testimonials = () => {
                   setIsPopup={setIsPopup}
                   setIsShow={setIsShow}
                   setActiveItemId={setActiveItemId}
+                  handleGetSingleItem={handleGetSingleItem}
                   className="md:col-span-3 sm:col-span-6 col-span-12"
-                />
-
-                <ModalComponent
-                  popup={isPopup}
-                  isShow={isShow}
-                  onClose={setIsShow}
-                  onSubmit={handleUpdate}
-                  itemDelete={handleDelete}
-                  deleteId={activeItemId}
                 >
-                  <div>
-                    <div className="flex justify-between items-center gap-2">
-                      <div className="mb-2 block flex-1">
-                        <Label value="Name" htmlFor="name" />
-                        <TextInput
-                          id="name"
-                          type="text"
-                          name="name"
-                          placeholder="Jhon Doe"
-                          required={true}
-                        />
-                      </div>
-
-                      <div className="mb-2 block flex-1">
-                        <Label value="Designation" htmlFor="designation" />
-                        <TextInput
-                          id="designation"
-                          type="text"
-                          name="designation"
-                          value={testimonialData1?.designation}
-                          placeholder="Software Engineer"
-                          required={false}
-                          onChange={handleInput}
-                        />
-                      </div>
-                    </div>
-                    <div className="mb-2 block">
-                      <Label value="Tilte" htmlFor="title" />
-                      <TextInput
-                        id="title"
-                        type="text"
-                        name="title"
-                        value={testimonialData1?.title}
-                        placeholder="Your Title.."
-                        required={true}
-                        onChange={handleInput}
-                      />
-                    </div>
-
-                    <div className="mb-2 block">
-                      <Label value="Description" htmlFor="description" />
-                      <Textarea
-                        id="description"
-                        rows={3}
-                        name="description"
-                        value={testimonialData1?.description}
-                        placeholder="Your Description"
-                        required={true}
-                        onChange={handleInput}
-                      />
-                    </div>
-
-                    <div className="mb-2 block">
-                      <Label htmlFor="image" value="Upload Image" />
-                      <FileInput
-                        id="image"
-                        name="image"
-                        onChange={handleFile}
-                      />
-                    </div>
-
-                    <div className="mb-2 block">
-                      <Label htmlFor="rating" value="Your Rating" />
-                      <Rating>
-                        {[1, 2, 3, 4, 5].map((_, index) => {
-                          if (index + 1 <= testimonialData1?.rating) {
-                            return (
-                              <div
-                                onMouseEnter={() => handleRating(index)}
-                                key={new Date().getTime() + index + 1}
-                              >
-                                <Rating.Star filled={true} />
-                              </div>
-                            );
-                          } else {
-                            return (
-                              <div
-                                onMouseEnter={() => handleRating(index)}
-                                key={new Date().getTime() + index + 1}
-                              >
-                                <Rating.Star filled={false} />
-                              </div>
-                            );
-                          }
-                        })}
-                      </Rating>
-                    </div>
-                  </div>
-                </ModalComponent>
+                  <ul className="list-[square] mx-4 px-5">
+                    <li>{item.title}</li>
+                    <li>{item.name}</li>
+                    <li>{item.rating}</li>
+                    <li>{item.designation}</li>
+                    <li>{item.description.slice(0, 10)}...</li>
+                  </ul>
+                </Card>
               </>
             );
           })
@@ -341,6 +289,103 @@ const Testimonials = () => {
             Upload Your Testimonials
           </div>
         )}
+
+        <ModalComponent
+          popup={isPopup}
+          isShow={isShow}
+          onClose={setIsShow}
+          onSubmit={handleUpdate}
+          itemDelete={handleDelete}
+          deleteId={activeItemId}
+          heading="Testimonial"
+        >
+          <div>
+            <div className="flex justify-between items-center gap-2">
+              <div className="mb-2 block flex-1">
+                <Label value="Name" htmlFor="updatename" />
+                <TextInput
+                  id="updatename"
+                  type="text"
+                  name="name"
+                  placeholder="Jhon Doe"
+                  value={testimonialData?.name}
+                  onCanPlay={handleInput}
+                  required={true}
+                />
+              </div>
+
+              <div className="mb-2 block flex-1">
+                <Label value="Designation" htmlFor="updatedesignation" />
+                <TextInput
+                  id="updatedesignation"
+                  type="text"
+                  name="designation"
+                  value={testimonialData?.designation}
+                  placeholder="Software Engineer"
+                  required={false}
+                  onChange={handleInput}
+                />
+              </div>
+            </div>
+            <div className="mb-2 block">
+              <Label value="Tilte" htmlFor="updatetitle" />
+              <TextInput
+                id="updatetitle"
+                type="text"
+                name="title"
+                value={testimonialData?.title}
+                placeholder="Your Title.."
+                required={true}
+                onChange={handleInput}
+              />
+            </div>
+
+            <div className="mb-2 block">
+              <Label value="Description" htmlFor="updatedescription" />
+              <Textarea
+                id="updatedescription"
+                rows={3}
+                name="description"
+                value={testimonialData?.description}
+                placeholder="Your Description"
+                required={true}
+                onChange={handleInput}
+              />
+            </div>
+
+            <div className="mb-2 block">
+              <Label htmlFor="updateimage" value="Upload Image" />
+              <FileInput id="updateimage" name="image" onChange={handleFile} />
+            </div>
+
+            <div className="mb-2 block">
+              <Label htmlFor="rating" value="Your Rating" />
+              <Rating>
+                {[1, 2, 3, 4, 5].map((_, index) => {
+                  if (index + 1 <= testimonialData?.rating) {
+                    return (
+                      <div
+                        onMouseEnter={() => handleRating(index)}
+                        key={new Date().getTime() + index + 1}
+                      >
+                        <Rating.Star filled={true} />
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div
+                        onMouseEnter={() => handleRating(index)}
+                        key={new Date().getTime() + index + 1}
+                      >
+                        <Rating.Star filled={false} />
+                      </div>
+                    );
+                  }
+                })}
+              </Rating>
+            </div>
+          </div>
+        </ModalComponent>
       </div>
     </div>
   );

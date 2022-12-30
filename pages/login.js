@@ -4,20 +4,23 @@ import { setToken } from "../redux/features/AuthSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/router";
 import { login } from "../api/auth";
+import { Spinner } from "flowbite-react";
 
 const Login = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const [data, setData] = useState({ username: "", password: "" });
+  const [isLoading, setIsLoading] = useState(false);
   const token = useSelector((state) => state.auth.token);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
+      setIsLoading(true);
       const res = await login(data);
-      console.log(res);
       dispatch(setToken(res.data.token?.access));
       router.push("/");
+      setIsLoading(false);
     } catch (error) {}
   };
 
@@ -153,9 +156,11 @@ const Login = () => {
             </div>
 
             <div className="flex w-full">
-              <button
-                type="submit"
-                className="
+              {isLoading ? (
+                <button
+                  type="submit"
+                  disabled
+                  className="
                 flex
                 mt-2
                 items-center
@@ -172,23 +177,49 @@ const Login = () => {
                 duration-150
                 ease-in
               "
-                onClick={handleLogin}
-              >
-                <span className="mr-2 uppercase">Login</span>
-                <span>
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </span>
-              </button>
+                >
+                  <span className="mr-2 uppercase">
+                    <Spinner color="failure" /> Loading
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="
+flex
+mt-2
+items-center
+justify-center
+focus:outline-none
+text-white text-sm
+sm:text-base
+bg-red-500
+hover:bg-red-600
+rounded-2xl
+py-2
+w-full
+transition
+duration-150
+ease-in
+"
+                  onClick={handleLogin}
+                >
+                  <span className="mr-2 uppercase">Login</span>
+                  <span>
+                    <svg
+                      className="h-6 w-6"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </span>
+                </button>
+              )}
             </div>
           </form>
         </div>

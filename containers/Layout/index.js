@@ -5,6 +5,7 @@ import WelcomeBanner from "../../partials/dashboard/WelcomeBanner";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
 import { ToastContainer } from "react-toastify";
+
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const token = useSelector((state) => state.auth.token);
@@ -17,6 +18,7 @@ const Layout = ({ children }) => {
     }
     return <>{children}</>;
   }
+
   return (
     <div className="flex h-screen overflow-hidden font-[Lato]">
       {/* Sidebar */}

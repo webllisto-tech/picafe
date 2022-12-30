@@ -8,16 +8,25 @@ import { RxDashboard } from "react-icons/rx";
 import { TfiAngleDown } from "react-icons/tfi";
 import { MdRestaurantMenu, MdPermContactCalendar } from "react-icons/md";
 import { RiGalleryFill } from "react-icons/ri";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { categoryGet } from "../api/category";
+import { galleryCategoryGet } from "../api/gallercategory";
+import {
+  setCategoryItem,
+  setGalleryCategoryItem,
+} from "../redux/features/CategorySlice";
+import { removeToken } from "../redux/features/AuthSlice";
+import { toast } from "react-toastify";
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const location = useRouter();
   const [pathname, setPathName] = useState(location.pathname);
   const [category, setCategory] = useState([]);
+  const [galleryCategory, setGalleryCategory] = useState([]);
   const isLoad = useSelector((state) => state.loader.isLoad);
   const token = useSelector((state) => state.auth.token);
-
+  const dispatch = useDispatch();
+  const router = useRouter();
   const trigger = useRef(null);
   const sidebar = useRef(null);
 
@@ -32,11 +41,31 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
   useEffect(() => {
     (async () => {
-      const res = await categoryGet(token);
-      // console.log(res.data, '<---');
-      setCategory(res.data);
+      const [categoryData, galleryCategoryData] = await Promise.all([
+        categoryGet(token),
+        galleryCategoryGet(token),
+      ]);
+
+      console.log(galleryCategoryData);
+
+      if (categoryData?.data) {
+        setCategory(categoryData.data);
+        setGalleryCategory(galleryCategoryData.data);
+        dispatch(setCategoryItem(categoryData.data));
+        dispatch(setGalleryCategoryItem(galleryCategoryData.data));
+      }
+
+      if (categoryData?.response?.status === 401) {
+        dispatch(removeToken());
+        router.push("/login");
+        toast.info("Session Expired!");
+      }
+
+      if (categoryData?.code === "ERR_NETWORK") {
+        toast.error("Network Error!");
+      }
     })();
-  }, [isLoad, token]);
+  }, [isLoad, token, dispatch, router]);
 
   // close on click outside
   useEffect(() => {
@@ -282,7 +311,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                                   className="mb-1 last:mb-0"
                                 >
                                   <Link
-                                    href={`/menu/${item.name}`}
+                                    href={`/menu/${item.id}`}
                                     className="block text-slate-400 hover:text-slate-200 transition duration-150 truncate"
                                   >
                                     <span className="text-sm font-medium capitalize lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
@@ -312,7 +341,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
               </SidebarLinkGroup>
 
               {/* Gallery */}
-              <li
+              {/* <li
                 className={`px-3 py-2 rounded-sm mb-0.5 last:mb-0 ${
                   pathname.includes("/gallery") && "bg-slate-900"
                 }`}
@@ -330,7 +359,78 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     </span>
                   </div>
                 </Link>
-              </li>
+              </li> */}
+
+              <SidebarLinkGroup activecondition={pathname.includes("/gallery")}>
+                {(handleClick, open) => {
+                  return (
+                    <React.Fragment>
+                      <a
+                        href="#0"
+                        className={`block text-slate-200 hover:text-white truncate transition duration-150 ${
+                          pathname.includes("/gallery") &&
+                          "hover:text-slate-200"
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          sidebarExpanded
+                            ? handleClick()
+                            : setSidebarExpanded(true);
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <RiGalleryFill className="shrink-0 h-6 w-6" />
+                            <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                              Gallery
+                            </span>
+                          </div>
+                          <div className="flex shrink-0 ml-2">
+                            <TfiAngleDown
+                              className={`${open && "rotate-180"}`}
+                            />
+                          </div>
+                        </div>
+                      </a>
+                      <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
+                        <ul className={`pl-9 mt-1 ${!open && "hidden"}`}>
+                          {galleryCategory &&
+                          galleryCategory?.length > 0 ? (
+                            galleryCategory.map((item, index) => {
+                              return (
+                                <li
+                                  key={new Date().getTime() + index}
+                                  className="mb-1 last:mb-0"
+                                >
+                                  <Link
+                                    href={`/gallery/${item.id}`}
+                                    className="block text-slate-400 hover:text-slate-200 transition duration-150 truncate"
+                                  >
+                                    <span className="text-sm font-medium capitalize lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                                      {item.name}
+                                    </span>
+                                  </Link>
+                                </li>
+                              );
+                            })
+                          ) : (
+                            <li className="mb-1 last:mb-0">
+                              <Link
+                                href={`/gallery/create`}
+                                className="block text-slate-400 hover:text-slate-200 transition duration-150 truncate"
+                              >
+                                <span className="text-sm font-medium capitalize lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                                  Create Gallery
+                                </span>
+                              </Link>
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    </React.Fragment>
+                  );
+                }}
+              </SidebarLinkGroup>
 
               {/* Contacts */}
               <li

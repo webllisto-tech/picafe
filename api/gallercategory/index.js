@@ -1,12 +1,12 @@
 import axios from "axios";
 const apiUrl = process.env.NEXT_PUBLIC_APIURL;
 
-export const categoryPost = async (data, token) => {
+export const galleryCategoryPost = async (data, token) => {
   const formdata = new FormData();
   formdata.append("name", data);
 
   try {
-    const res = await axios.post(`${apiUrl}/category/`, formdata, {
+    const res = await axios.post(`${apiUrl}/gallery-category/`, formdata, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -18,9 +18,9 @@ export const categoryPost = async (data, token) => {
   }
 };
 
-export const categoryGet = async (token) => {
+export const galleryCategoryGet = async (token) => {
   try {
-    const res = await axios.get(`${apiUrl}/category/`, {
+    const res = await axios.get(`${apiUrl}/gallery-category/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -31,8 +31,8 @@ export const categoryGet = async (token) => {
   }
 };
 
-export const categoryDelete = async (id, token) => {
-  const res = await axios.delete(`${apiUrl}/category/${id}/`, {
+export const galleryCategoryDelete = async (id, token) => {
+  const res = await axios.delete(`${apiUrl}/gallery-category/${id}/`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
