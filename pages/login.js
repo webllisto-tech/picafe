@@ -50,11 +50,11 @@ const Login = () => {
         max-w-md
       "
       >
-        <div className="font-medium self-center text-xl sm:text-3xl text-gray-800">
-          Join us Now
+        <div className="font-medium self-center text-lg sm:text-2xl text-gray-800">
+          Welcome in PiCafe Dashboard
         </div>
         <div className="mt-4 self-center text-xl sm:text-sm text-gray-800">
-          Enter your credentials to get access account
+          Enter your credentials to get access
         </div>
 
         <div className="mt-10">

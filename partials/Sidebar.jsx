@@ -7,6 +7,7 @@ import { HiOutlineHome, HiOutlineUserGroup } from "react-icons/hi";
 import { RxDashboard } from "react-icons/rx";
 import { TfiAngleDown } from "react-icons/tfi";
 import { MdRestaurantMenu, MdPermContactCalendar } from "react-icons/md";
+import { TbListDetails } from "react-icons/tb";
 import { RiGalleryFill } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
 import { categoryGet } from "../api/category";
@@ -46,19 +47,17 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         galleryCategoryGet(token),
       ]);
 
-      console.log(galleryCategoryData);
-
       if (categoryData?.data) {
         setCategory(categoryData.data);
         setGalleryCategory(galleryCategoryData.data);
         dispatch(setCategoryItem(categoryData.data));
         dispatch(setGalleryCategoryItem(galleryCategoryData.data));
       }
-
+      console.log(categoryData);
       if (categoryData?.response?.status === 401) {
+        toast.info("Session Expired!");
         dispatch(removeToken());
         router.push("/login");
-        toast.info("Session Expired!");
       }
 
       if (categoryData?.code === "ERR_NETWORK") {
@@ -394,25 +393,36 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
                         <ul className={`pl-9 mt-1 ${!open && "hidden"}`}>
-                          {galleryCategory &&
-                          galleryCategory?.length > 0 ? (
-                            galleryCategory.map((item, index) => {
-                              return (
-                                <li
-                                  key={new Date().getTime() + index}
-                                  className="mb-1 last:mb-0"
+                          {galleryCategory && galleryCategory?.length > 0 ? (
+                            <>
+                              <li className="mb-1 last:mb-0">
+                                <Link
+                                  href={`/gallery/viewall`}
+                                  className="block text-slate-400 hover:text-slate-200 transition duration-150 truncate"
                                 >
-                                  <Link
-                                    href={`/gallery/${item.id}`}
-                                    className="block text-slate-400 hover:text-slate-200 transition duration-150 truncate"
+                                  <span className="text-sm font-medium capitalize lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                                    View All
+                                  </span>
+                                </Link>
+                              </li>
+                              {galleryCategory.map((item, index) => {
+                                return (
+                                  <li
+                                    key={new Date().getTime() + index}
+                                    className="mb-1 last:mb-0"
                                   >
-                                    <span className="text-sm font-medium capitalize lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                      {item.name}
-                                    </span>
-                                  </Link>
-                                </li>
-                              );
-                            })
+                                    <Link
+                                      href={`/gallery/${item.id}`}
+                                      className="block text-slate-400 hover:text-slate-200 transition duration-150 truncate"
+                                    >
+                                      <span className="text-sm font-medium capitalize lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                                        {item.name}
+                                      </span>
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </>
                           ) : (
                             <li className="mb-1 last:mb-0">
                               <Link
@@ -448,6 +458,26 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     <MdPermContactCalendar className="shrink-0 h-6 w-6" />
                     <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
                       Contacts
+                    </span>
+                  </div>
+                </Link>
+              </li>
+
+              <li
+                className={`px-3 py-2 rounded-sm mb-0.5 last:mb-0 ${
+                  pathname.includes("/footer") && "bg-slate-900"
+                }`}
+              >
+                <Link
+                  href="/footer"
+                  className={`block text-slate-200 hover:text-white truncate transition duration-150 ${
+                    pathname.includes("/footer") && "hover:text-slate-200"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <TbListDetails className="shrink-0 h-6 w-6" />
+                    <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                      Footer
                     </span>
                   </div>
                 </Link>

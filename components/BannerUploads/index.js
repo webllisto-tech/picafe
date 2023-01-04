@@ -7,11 +7,12 @@ import { bannerDelete, bannerGet, bannerPost } from "../../api/bannerupload";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsLoad } from "../../redux/features/LoaderSlice";
 import { toast } from "react-toastify";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 
 const BannerUploads = () => {
   const [isShowUploadModal, setIsShowUploadModal] = useState(false);
   const [bannerUploadGetData, setBannerUploadGetData] = useState([]);
-  const [image, setImage] = useState({});
   const [activeItemId, setActiveItemId] = useState("");
   const [isShow, setIsShow] = useState(false);
   const [isPopup, setIsPopup] = useState(false);
@@ -21,38 +22,50 @@ const BannerUploads = () => {
   const [isLoading, setIsLoading] = useState(false);
   const token = useSelector((state) => state.auth.token);
 
-  const handleBannerUpload = async (e) => {
-    e.preventDefault();
-    dispatch(setIsLoad(true));
+  const handleBannerUpload = async (image) => {
     const data = new FormData();
     data.append("image", image);
     const res = await bannerPost(data, token);
-    if (res) {
+    if (res.status === 201) {
       toast.success("Uploaded Successfully!");
       setIsShowUploadModal(false);
-      setImage("");
-      document.getElementById("file").value = "";
-      dispatch(setIsLoad(false));
+      dispatch(setIsLoad(!isLoad));
     }
-  };
-
-  const handleFile = (e) => {
-    setImage(e.target.files[0]);
   };
 
   const handleDelete = async (id) => {
     try {
-      dispatch(setIsLoad(true));
       const res = await bannerDelete(id, token);
-      if (res) {
+      if (res.status === 204) {
         setIsShow(false);
         toast.success("Deleted Successfully!");
-        dispatch(setIsLoad(false));
+        dispatch(setIsLoad(!isLoad));
       }
     } catch (error) {
       console.log(error);
     }
   };
+
+  const formikBanner = useFormik({
+    initialValues: {
+      image: "",
+    },
+
+    validationSchema: Yup.object({
+      image: Yup.mixed()
+        .required("Please Fill this field!")
+        .test(
+          "fileSize",
+          "File Too Large! Max File Size 50MB",
+          (file) => file?.size <= 50 * 1000 * 1000
+        ),
+    }),
+
+    onSubmit: (values, action) => {
+      handleBannerUpload(values.image);
+      action.resetForm();
+    },
+  });
 
   useEffect(() => {
     (async () => {
@@ -80,17 +93,22 @@ const BannerUploads = () => {
             popup={false}
             isShow={isShowUploadModal}
             onClose={setIsShowUploadModal}
-            onSubmit={handleBannerUpload}
+            onSubmit={formikBanner.handleSubmit}
             heading="Upload file"
           >
             <div id="fileUpload">
               <FileInput
                 id="file"
                 name="image"
-                onChange={handleFile}
+                onChange={(e) =>
+                  formikBanner.setFieldValue("image", e.target.files[0])
+                }
                 accept=".jpg,.webp,.jpeg,.mp4,.mpeg,.mov,.avi"
                 helperText="Allowed Files .jpg,.webp,.jpeg,.mp4,.mpeg,.mov,.avi"
               />
+              <span className="text-red-600 text-sm">
+                {formikBanner.errors ? formikBanner.errors.image : ""}
+              </span>
             </div>
           </ModalComponent>
         </div>
@@ -117,7 +135,7 @@ const BannerUploads = () => {
           popup={false}
           isShow={isShowUploadModal}
           onClose={setIsShowUploadModal}
-          onSubmit={handleBannerUpload}
+          onSubmit={formikBanner.handleSubmit}
           heading="Upload file"
           isLoading={isLoad}
         >
@@ -125,10 +143,15 @@ const BannerUploads = () => {
             <FileInput
               id="file"
               name="image"
-              onChange={handleFile}
+              onChange={(e) =>
+                formikBanner.setFieldValue("image", e.target.files[0])
+              }
               accept=".jpg,.png,.webp,.jpeg,.mp4,.mpeg,.mov,.avi"
               helperText="Allowed Files .jpg,.png,.webp,.jpeg,.mp4,.mpeg,.mov,.avi"
             />
+            <span className="text-red-600 text-sm">
+              {formikBanner.errors ? formikBanner.errors.image : ""}
+            </span>
           </div>
         </ModalComponent>
       </div>

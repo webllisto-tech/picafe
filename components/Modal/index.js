@@ -31,9 +31,16 @@ const ModalComponent = ({
                 Are you sure you want to delete this item?
               </h3>
               <div className="flex justify-center gap-4">
-                <Button color="failure" onClick={() => itemDelete(deleteId)}>
-                  Yes, I&apos;m sure
-                </Button>
+                {isLoading ? (
+                  <Button disabled onClick={onSubmit} color="failure">
+                    <Spinner color="failure" className="mx-2" /> Loading
+                  </Button>
+                ) : (
+                  <Button color="failure" onClick={() => itemDelete(deleteId)}>
+                    Yes, I&apos;m sure
+                  </Button>
+                )}
+
                 <Button color="gray" onClick={() => onClose((prev) => !prev)}>
                   No, cancel
                 </Button>
@@ -51,7 +58,7 @@ const ModalComponent = ({
             <>
               {isLoading ? (
                 <Button disabled onClick={onSubmit} color="failure">
-                  <Spinner color="failure" className="mx-2" /> Submit
+                  <Spinner color="failure" className="mx-2" /> Loading...
                 </Button>
               ) : (
                 <Button onClick={onSubmit} color="failure">

@@ -16,13 +16,11 @@ export const menuItemPost = async (data, token) => {
   }
 };
 
-export const menuItemGet = async (id, token) => {
+export const menuItemGet = async (id, page) => {
   try {
-    const res = await axios.get(`${apiUrl}/specialmenu-category/${id}/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const res = await axios.get(
+      `${apiUrl}/specialmenu-category/${id}/?page=${page}/`
+    );
     return res;
   } catch (error) {
     return error;

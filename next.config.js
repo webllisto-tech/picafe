@@ -7,6 +7,7 @@ const nextConfig = {
       "images.pexels.com",
       "source.unsplash.com",
       "43.205.117.141",
+      "api.thepicafe.com"
     ],
   },
 };

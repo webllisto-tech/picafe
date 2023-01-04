@@ -2,6 +2,21 @@ import Image from "next/image";
 import React from "react";
 
 function WelcomeBanner() {
+  const greet = () => {
+    const d = new Date();
+
+    console.log(d.getHours());
+    if (d.getHours() > 6 && d.getHours() < 12) {
+      return "Good Morning";
+    } else if (d.getHours() >= 12 && d.getHours() < 17) {
+      return "Good After Noon";
+    } else if (d.getHours() >= 17 && d.getHours() < 20) {
+      return "Good Evening";
+    } else {
+      return "Good Night";
+    }
+  };
+
   return (
     <div className="relative bg-[#D33746] p-4 sm:p-8 rounded-sm overflow-hidden mb-8">
       <div
@@ -18,7 +33,7 @@ function WelcomeBanner() {
 
       <div className="relative">
         <h1 className="text-2xl md:text-3xl text-white font-bold mb-1">
-          Good afternoon, Admin. 👋
+          {greet()}, Admin. 👋
         </h1>
       </div>
     </div>

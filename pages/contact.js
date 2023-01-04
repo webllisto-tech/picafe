@@ -1,21 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { Table, Pagination, Spinner } from "flowbite-react";
+import { Table, Spinner } from "flowbite-react";
 import { contactGet } from "../api/contact";
 import { useSelector } from "react-redux";
+import Pagination from "react-js-pagination";
 
 const Contact = () => {
   const [contactFetchData, setContactFetchData] = useState([]);
-  const [isLoading, setisLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const token = useSelector((state) => state.auth.token);
 
   useEffect(() => {
     (async () => {
-      setisLoading(true);
-      const res = await contactGet(token);
-      setisLoading(false);
-      setContactFetchData(res.data?.all_data || []);
+      setIsLoading(true);
+      const res = await contactGet(token, 1);
+      setIsLoading(false);
+      setContactFetchData(res.data);
     })();
   }, [token]);
+
+  const handlePagination = async (page) => {
+    setIsLoading(true);
+    if (query.slug) {
+      const res = await contactGet(token, page);
+      setContactFetchData(res.data);
+      setIsLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -68,8 +78,8 @@ const Contact = () => {
             </Table.Head>
 
             <Table.Body className="divide-y">
-              {contactFetchData.length > 0 ? (
-                contactFetchData.map((item, index) => {
+              {contactFetchData?.data?.length > 0 ? (
+                contactFetchData?.data?.map((item, index) => {
                   return (
                     <Table.Row
                       key={new Date().getTime() + index + 1}
@@ -101,15 +111,18 @@ const Contact = () => {
             </Table.Body>
           </Table>
         </div>
-        
+
         <Pagination
-          currentPage={0}
-          layout="table"
-          onPageChange={() => {}}
-          showIcons={true}
-          totalPages={0}
-          nextLabel="Next"
-          previousLabel="Prev"
+          activePage={parseInt(contactFetchData?.current_page)}
+          itemsCountPerPage={6}
+          totalItemsCount={contactFetchData?.total_contacts}
+          pageRangeDisplayed={5}
+          onChange={handlePagination}
+          innerClass="flex gap-5"
+          activeClass="bg-red-500 text-white border-transparent"
+          linkClass="w-full h-full flex items-center justify-center"
+          disabledClass="bg-gray-200 text-white border-0 pointer-events-none"
+          itemClass="border border-gray-500 rounded-full w-9 h-9 hover:bg-red-500 hover:text-white hover:border-0"
         />
       </div>
     </div>

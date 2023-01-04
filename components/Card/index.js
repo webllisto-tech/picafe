@@ -12,6 +12,7 @@ const Card = ({
   setIsPopup,
   setIsShow,
   handleGetSingleItem,
+  setActiveItemId,
   children,
 }) => {
   return (
@@ -19,6 +20,13 @@ const Card = ({
       <div className={`${styles.card_wrp} ${className}`}>
         <div className={styles.card}>
           <div className={styles.card_front}>
+            {item.category_name ? (
+              <span className="top-2 right-2 absolute z-[1] capitalize rounded-md bg-blue-600 py-1 px-3  text-white">
+                {item.category_name}
+              </span>
+            ) : (
+              <></>
+            )}
             <Image
               src={`${process.env.NEXT_PUBLIC_APIURL}${
                 item.image ? item.image : ""
@@ -50,7 +58,7 @@ const Card = ({
                 <button
                   onClick={() => {
                     setIsShow((prev) => !prev);
-                    handleGetSingleItem(item.id);
+                    setActiveItemId(item.id);
                     setIsPopup(true);
                   }}
                   className={styles.icon_wrp}

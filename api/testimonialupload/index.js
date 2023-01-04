@@ -30,7 +30,7 @@ const changeUrlToByte = async (url) => {
   let file;
   const data = await res.blob();
   if (data.type === "image/png") {
-    file = new File([data], "image.webp", {
+    file = new File([data], "image.png", {
       type: "image/png",
     });
   }

@@ -20,11 +20,12 @@ import {
 } from "../../api/testimonialupload";
 import { useSelector, useDispatch } from "react-redux";
 import { setIsLoad } from "../../redux/features/LoaderSlice";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 
 const Testimonials = () => {
   const [isShowTestimonialModal, setIsShowTestimonialModal] = useState(false);
-  const [testimonialData, setTestimonialData] = useState({ rating: 0 });
-
+  const [isUpdateDataLoad, setIsUpdateDataLoad] = useState(false);
   const [testimonialGetData, setTestimonialGetData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeItemId, setActiveItemId] = useState("");
@@ -35,39 +36,14 @@ const Testimonials = () => {
   const dispatch = useDispatch();
   const token = useSelector((state) => state.auth.token);
 
-  const handleRating = (index) => {
-    setTestimonialData({ ...testimonialData, rating: index + 1 });
-  };
-
-  const handleInput = (e) => {
-    setTestimonialData({ ...testimonialData, [e.target.name]: e.target.value });
-  };
-
-  const handleFile = (e) => {
-    setTestimonialData({
-      ...testimonialData,
-      [e.target.name]: e.target.files[0],
-    });
-  };
-
-  const handleSubmit = async () => {
+  const handleSubmit = async (data) => {
     try {
-      setIsLoading(false);
-      dispatch(setIsLoad(true));
-      const data = new FormData();
-      data.append("name", testimonialData?.name);
-      data.append("designation", testimonialData?.designation);
-      data.append("description", testimonialData?.description);
-      data.append("title", testimonialData?.title);
-      data.append("rating", testimonialData?.rating);
-      data.append("image", testimonialData?.image);
-
+      setIsLoading(true);
       const res = await testimonialPost(data, token);
-      if (res) {
+      if (res.status === 201) {
         setIsShowTestimonialModal(false);
-        setTestimonialData({});
-        document.getElementById("image").value = "";
-        dispatch(setIsLoad(false));
+        dispatch(setIsLoad(!isLoad));
+        setIsLoading(false);
       }
     } catch (error) {
       console.log(error);
@@ -77,13 +53,12 @@ const Testimonials = () => {
   const handleDelete = async (id) => {
     try {
       setIsLoading(true);
-      dispatch(setIsLoad(true));
       const res = await testimonialDelete(id, token);
       console.log(res);
 
       if (res) {
         setIsShow(false);
-        dispatch(setIsLoad(false));
+        dispatch(setIsLoad(!isLoad));
         setIsLoading(false);
       }
     } catch (error) {
@@ -91,17 +66,12 @@ const Testimonials = () => {
     }
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (data) => {
     try {
       setIsLoading(true);
-      dispatch(setIsLoad(true));
-      const res = await testimonialGetSingleUpdate(
-        testimonialData.id,
-        testimonialData,
-        token
-      );
+      const res = await testimonialGetSingleUpdate(data.id, data, token);
       if (res) {
-        dispatch(setIsLoad(false));
+        dispatch(setIsLoad(!isLoad));
         setIsLoading(false);
         setIsShow(false);
       }
@@ -110,11 +80,81 @@ const Testimonials = () => {
     }
   };
 
+  const formikTestimonial = useFormik({
+    initialValues: {
+      name: "",
+      designation: "",
+      description: "",
+      title: "",
+      rating: 0,
+      image: "",
+    },
+    validationSchema: Yup.object({
+      name: Yup.string("Enter atleast 3 character!").required(
+        "please fill this required field!"
+      ),
+      description: Yup.string("Enter atleast 30 character!").required(
+        "please fill this required field!"
+      ),
+      title: Yup.string("Enter atleast 3 character!").required(
+        "please fill this required field!"
+      ),
+      rating: Yup.number().required("please fill this required field!"),
+      image: Yup.mixed()
+        .required("please fill this required field!")
+        .test(
+          "fileSize",
+          "File Too Large! Max File Size 50MB",
+          (file) => file?.size <= 50 * 1000 * 1000
+        ),
+    }),
+
+    onSubmit: (values, action) => {
+      handleSubmit(values);
+      action.resetForm();
+    },
+  });
+
+  const formikTestimonialUpdate = useFormik({
+    initialValues: {
+      name: "",
+      designation: "",
+      description: "",
+      title: "",
+      rating: 0,
+      image: "",
+    },
+    validationSchema: Yup.object({
+      name: Yup.string("Enter atleast 3 character!").required(
+        "please fill this required field!"
+      ),
+      description: Yup.string("Enter atleast 30 character!").required(
+        "please fill this required field!"
+      ),
+      title: Yup.string("Enter atleast 3 character!").required(
+        "please fill this required field!"
+      ),
+      rating: Yup.number().required("please fill this required field!"),
+      image: Yup.mixed()
+        .required("please fill this required field!")
+        .test(
+          "fileSize",
+          "File Too Large! Max File Size 50MB",
+          (file) => file?.size <= 50 * 1000 * 1000
+        ),
+    }),
+
+    onSubmit: (values, action) => {
+      handleUpdate(values);
+      action.resetForm();
+    },
+  });
+
   const handleGetSingleItem = async (id) => {
-    setIsLoading(true);
+    setIsUpdateDataLoad(true);
     const res = await testimonialGetSingle(id, token);
-    setTestimonialData(res);
-    setIsLoading(false);
+    formikTestimonialUpdate.setValues(res);
+    setIsUpdateDataLoad(false);
   };
 
   useEffect(() => {
@@ -134,7 +174,7 @@ const Testimonials = () => {
             <h2 className="text-xl font-[700]">Your Testimonials</h2>
 
             <button
-              onClick={() => setIsShowTestimonialModal((prev) => !prev)}
+              // onClick={() => setIsShowTestimonialModal((prev) => !prev)}
               className="flex items-center justify-center gap-2 bg-red-400 text-white py-1 px-2 rounded-full hover:bg-red-500"
             >
               <CgAdd className="shrink-0 w-6 h-6" /> Add New
@@ -162,12 +202,12 @@ const Testimonials = () => {
         </button>
       </div>
 
-{/* Upload Testimonials Modal */}
+      {/* Upload Testimonials Modal */}
       <ModalComponent
         popup={false}
         isShow={isShowTestimonialModal}
         onClose={setIsShowTestimonialModal}
-        onSubmit={handleSubmit}
+        onSubmit={formikTestimonial.handleSubmit}
         heading="Upload Testimonials"
       >
         <div>
@@ -179,10 +219,14 @@ const Testimonials = () => {
                 type="text"
                 name="name"
                 placeholder="Jhon Doe"
-                value={testimonialData?.name}
+                value={formikTestimonial.values.name}
                 required={true}
-                onChange={handleInput}
+                onChange={formikTestimonial.handleChange}
+                onBlur={formikTestimonial.handleBlur}
               />
+              <span className="text-red-600 text-sm">
+                {formikTestimonial.errors ? formikTestimonial.errors.name : ""}
+              </span>
             </div>
 
             <div className="mb-2 block flex-1">
@@ -191,11 +235,15 @@ const Testimonials = () => {
                 id="designation"
                 type="text"
                 name="designation"
-                value={testimonialData?.designation}
+                value={formikTestimonial.values.designation}
                 placeholder="Software Engineer"
                 required={false}
-                onChange={handleInput}
+                onChange={formikTestimonial.handleChange}
+                onBlur={formikTestimonial.handleBlur}
               />
+              <span className="text-transparent pointer-events-none select-none text-sm">
+                {formikTestimonial.errors ? formikTestimonial.errors.name : ""}
+              </span>
             </div>
           </div>
           <div className="mb-2 block">
@@ -204,11 +252,15 @@ const Testimonials = () => {
               id="title"
               type="text"
               name="title"
-              value={testimonialData?.title}
+              value={formikTestimonial.values.title}
               placeholder="Your Title.."
               required={true}
-              onChange={handleInput}
+              onChange={formikTestimonial.handleChange}
+              onBlur={formikTestimonial.handleBlur}
             />
+            <span className="text-red-600 text-sm">
+              {formikTestimonial.errors ? formikTestimonial.errors.title : ""}
+            </span>
           </div>
 
           <div className="mb-2 block">
@@ -217,26 +269,44 @@ const Testimonials = () => {
               id="description"
               rows={3}
               name="description"
-              value={testimonialData?.description}
+              value={formikTestimonial.values.description}
               placeholder="Your Description"
               required={true}
-              onChange={handleInput}
+              onChange={formikTestimonial.handleChange}
+              onBlur={formikTestimonial.handleBlur}
             />
+            <span className="text-red-600 text-sm">
+              {formikTestimonial.errors
+                ? formikTestimonial.errors.description
+                : ""}
+            </span>
           </div>
 
           <div className="mb-2 block">
             <Label htmlFor="image" value="Upload Image" />
-            <FileInput id="image" name="image" onChange={handleFile} />
+            <FileInput
+              id="image"
+              name="image"
+              accept=".jpg,.jpeg,.png"
+              onChange={(e) =>
+                formikTestimonial.setFieldValue("image", e.target.files[0])
+              }
+            />
+            <span className="text-red-600 text-sm">
+              {formikTestimonial.errors ? formikTestimonial.errors.image : ""}
+            </span>
           </div>
 
           <div className="mb-2 block">
             <Label htmlFor="rating" value="Your Rating" />
-            <Rating>
+            <Rating size={"md"}>
               {[1, 2, 3, 4, 5].map((_, index) => {
-                if (index + 1 <= testimonialData?.rating) {
+                if (index + 1 <= formikTestimonial.values.rating) {
                   return (
                     <div
-                      onMouseEnter={() => handleRating(index)}
+                      onMouseEnter={() =>
+                        formikTestimonial.setFieldValue("rating", index + 1)
+                      }
                       key={new Date().getTime() + index}
                     >
                       <Rating.Star filled={true} />
@@ -245,7 +315,9 @@ const Testimonials = () => {
                 } else {
                   return (
                     <div
-                      onMouseEnter={() => handleRating(index)}
+                      onMouseEnter={() =>
+                        formikTestimonial.setFieldValue("rating", index + 1)
+                      }
                       key={new Date().getTime() + index}
                     >
                       <Rating.Star filled={false} />
@@ -254,6 +326,9 @@ const Testimonials = () => {
                 }
               })}
             </Rating>
+            <span className="text-red-600 text-sm">
+              {formikTestimonial.errors ? formikTestimonial.errors.rating : ""}
+            </span>
           </div>
         </div>
       </ModalComponent>
@@ -273,12 +348,35 @@ const Testimonials = () => {
                   handleGetSingleItem={handleGetSingleItem}
                   className="md:col-span-3 sm:col-span-6 col-span-12"
                 >
-                  <ul className="list-[square] mx-4 px-5">
-                    <li>{item.title}</li>
-                    <li>{item.name}</li>
-                    <li>{item.rating}</li>
-                    <li>{item.designation}</li>
-                    <li>{item.description.slice(0, 10)}...</li>
+                  <ul className="px-2">
+                    <li className="text-ellipsis overflow-hidden whitespace-nowrap">
+                      {item.title}
+                    </li>
+                    <li className="w-[45%]">
+                      <Rating>
+                        {[1, 2, 3, 4, 5].map((_, index) => {
+                          if (index + 1 <= item.rating) {
+                            return (
+                              <div key={new Date().getTime() + index + 1}>
+                                <Rating.Star filled={true} />
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <div key={new Date().getTime() + index + 1}>
+                                <Rating.Star filled={false} />
+                              </div>
+                            );
+                          }
+                        })}
+                      </Rating>
+                    </li>
+                    <li className="font-bold text-right leading-3">
+                      -{item.name}
+                    </li>
+                    <li className="text-right text-sm text-gray-400">
+                      {item.designation}
+                    </li>
                   </ul>
                 </Card>
               </>
@@ -294,97 +392,155 @@ const Testimonials = () => {
           popup={isPopup}
           isShow={isShow}
           onClose={setIsShow}
-          onSubmit={handleUpdate}
+          onSubmit={formikTestimonialUpdate.handleSubmit}
           itemDelete={handleDelete}
           deleteId={activeItemId}
           heading="Testimonial"
         >
-          <div>
-            <div className="flex justify-between items-center gap-2">
-              <div className="mb-2 block flex-1">
-                <Label value="Name" htmlFor="updatename" />
+          {!isUpdateDataLoad ? (
+            <div>
+              <div className="flex justify-between items-center gap-2">
+                <div className="mb-2 block flex-1">
+                  <Label value="Name" htmlFor="updatename" />
+                  <TextInput
+                    id="updatename"
+                    type="text"
+                    name="name"
+                    placeholder="Jhon Doe"
+                    value={formikTestimonialUpdate.values.name}
+                    onChange={formikTestimonialUpdate.handleChange}
+                    onBlur={formikTestimonialUpdate.handleBlur}
+                    required={true}
+                  />
+                  <span className="text-red-600 text-sm">
+                    {formikTestimonialUpdate.errors
+                      ? formikTestimonialUpdate.errors.name
+                      : ""}
+                  </span>
+                </div>
+
+                <div className="mb-2 block flex-1">
+                  <Label value="Designation" htmlFor="updatedesignation" />
+                  <TextInput
+                    id="updatedesignation"
+                    type="text"
+                    name="designation"
+                    value={formikTestimonialUpdate.values.designation}
+                    placeholder="Software Engineer"
+                    required={false}
+                    onChange={formikTestimonialUpdate.handleChange}
+                    onBlur={formikTestimonialUpdate.handleBlur}
+                  />
+                  <span className="text-red-600 text-sm">
+                    {formikTestimonialUpdate.errors
+                      ? formikTestimonialUpdate.errors.designation
+                      : ""}
+                  </span>
+                </div>
+              </div>
+              <div className="mb-2 block">
+                <Label value="Tilte" htmlFor="updatetitle" />
                 <TextInput
-                  id="updatename"
+                  id="updatetitle"
                   type="text"
-                  name="name"
-                  placeholder="Jhon Doe"
-                  value={testimonialData?.name}
-                  onCanPlay={handleInput}
+                  name="title"
+                  value={formikTestimonialUpdate.values.title}
+                  placeholder="Your Title.."
                   required={true}
+                  onChange={formikTestimonialUpdate.handleChange}
+                  onBlur={formikTestimonialUpdate.handleBlur}
                 />
+                <span className="text-red-600 text-sm">
+                  {formikTestimonialUpdate.errors
+                    ? formikTestimonialUpdate.errors.title
+                    : ""}
+                </span>
               </div>
 
-              <div className="mb-2 block flex-1">
-                <Label value="Designation" htmlFor="updatedesignation" />
-                <TextInput
-                  id="updatedesignation"
-                  type="text"
-                  name="designation"
-                  value={testimonialData?.designation}
-                  placeholder="Software Engineer"
-                  required={false}
-                  onChange={handleInput}
+              <div className="mb-2 block">
+                <Label value="Description" htmlFor="updatedescription" />
+                <Textarea
+                  id="updatedescription"
+                  rows={3}
+                  name="description"
+                  value={formikTestimonialUpdate.values.description}
+                  placeholder="Your Description"
+                  required={true}
+                  onChange={formikTestimonialUpdate.handleChange}
+                  onBlur={formikTestimonialUpdate.handleBlur}
                 />
+                <span className="text-red-600 text-sm">
+                  {formikTestimonialUpdate.errors
+                    ? formikTestimonialUpdate.errors.description
+                    : ""}
+                </span>
               </div>
-            </div>
-            <div className="mb-2 block">
-              <Label value="Tilte" htmlFor="updatetitle" />
-              <TextInput
-                id="updatetitle"
-                type="text"
-                name="title"
-                value={testimonialData?.title}
-                placeholder="Your Title.."
-                required={true}
-                onChange={handleInput}
-              />
-            </div>
 
-            <div className="mb-2 block">
-              <Label value="Description" htmlFor="updatedescription" />
-              <Textarea
-                id="updatedescription"
-                rows={3}
-                name="description"
-                value={testimonialData?.description}
-                placeholder="Your Description"
-                required={true}
-                onChange={handleInput}
-              />
-            </div>
-
-            <div className="mb-2 block">
-              <Label htmlFor="updateimage" value="Upload Image" />
-              <FileInput id="updateimage" name="image" onChange={handleFile} />
-            </div>
-
-            <div className="mb-2 block">
-              <Label htmlFor="rating" value="Your Rating" />
-              <Rating>
-                {[1, 2, 3, 4, 5].map((_, index) => {
-                  if (index + 1 <= testimonialData?.rating) {
-                    return (
-                      <div
-                        onMouseEnter={() => handleRating(index)}
-                        key={new Date().getTime() + index + 1}
-                      >
-                        <Rating.Star filled={true} />
-                      </div>
-                    );
-                  } else {
-                    return (
-                      <div
-                        onMouseEnter={() => handleRating(index)}
-                        key={new Date().getTime() + index + 1}
-                      >
-                        <Rating.Star filled={false} />
-                      </div>
-                    );
+              <div className="mb-2 block">
+                <Label htmlFor="updateimage" value="Upload Image" />
+                <FileInput
+                  id="updateimage"
+                  name="image"
+                  accept=".png,.jpg,.jpeg"
+                  onChange={(e) =>
+                    formikTestimonialUpdate.setFieldValue(
+                      "image",
+                      e.target.files[0]
+                    )
                   }
-                })}
-              </Rating>
+                />
+                <span className="text-red-600 text-sm">
+                  {formikTestimonialUpdate.errors
+                    ? formikTestimonialUpdate.errors.image
+                    : ""}
+                </span>
+              </div>
+
+              <div className="mb-2 block">
+                <Label htmlFor="rating" value="Your Rating" />
+                <Rating>
+                  {[1, 2, 3, 4, 5].map((_, index) => {
+                    if (index + 1 <= formikTestimonialUpdate.values.rating) {
+                      return (
+                        <div
+                          onMouseEnter={() =>
+                            formikTestimonialUpdate.setFieldValue(
+                              "rating",
+                              index + 1
+                            )
+                          }
+                          key={new Date().getTime() + index + 1}
+                        >
+                          <Rating.Star filled={true} />
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div
+                          onMouseEnter={() =>
+                            formikTestimonialUpdate.setFieldValue(
+                              "rating",
+                              index + 1
+                            )
+                          }
+                          key={new Date().getTime() + index + 1}
+                        >
+                          <Rating.Star filled={false} />
+                        </div>
+                      );
+                    }
+                  })}
+                </Rating>
+                <span className="text-red-600 text-sm">
+                  {formikTestimonialUpdate.errors
+                    ? formikTestimonialUpdate.errors.rating
+                    : ""}
+                </span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <>Please Wait...</>
+          )}
         </ModalComponent>
       </div>
     </div>

@@ -1,36 +1,24 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import styles from "./style.module.scss";
 
-const Editor = ({ html, setHtml }) => {
+const Editor = ({ html, onChange }) => {
   const editor = useRef();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { CKEditor, ClassicEditor } = editor.current || {};
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     editor.current = {
       CKEditor: require("@ckeditor/ckeditor5-react").CKEditor,
       ClassicEditor: require("../../utils/ckeditor"),
     };
 
-    setIsLoading(true);
-
-    return () => {
-      editor.current = {
-        CKEditor: null,
-        ClassicEditor: null,
-      };
-    };
+    setIsLoading(false);
   }, []);
 
   return (
-    <div className="editor_wrp w-full">
-      {isLoading && CKEditor && ClassicEditor ? (
-        <CKEditor
-          editor={ClassicEditor}
-          data={html}
-          onChange={(event, editor) => {
-            setHtml(editor.getData());
-          }}
-        />
+    <div className={`${styles.editor_wrp} w-full`}>
+      {!isLoading ? (
+        <CKEditor editor={ClassicEditor} data={html} onChange={onChange} />
       ) : (
         "Loading..."
       )}

@@ -48,3 +48,7 @@ select:focus {
 .ck.ck-content::-webkit-scrollbar-thumb {
   background-color: #777;
 }
+
+.pagination_wrp {
+  display: flex;
+}
