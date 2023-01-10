@@ -6,12 +6,15 @@ import {
   galleryGet,
   galleryPost,
   getAllGallery,
+  getFilterGalleryByType,
+  getFilterGalleryByTypeCategory,
 } from "../../api/gallery";
 import { useDispatch, useSelector } from "react-redux";
 import Image from "next/image";
 import Video from "../../components/Video";
 import { MdDelete } from "react-icons/md";
 import { BiCategory } from "react-icons/bi";
+import Dropdown from "../../components/Dropdown";
 
 import {
   Label,
@@ -45,6 +48,7 @@ const Gallery = () => {
   const dispatch = useDispatch();
   const token = useSelector((state) => state.auth.token);
   const isLoad = useSelector((state) => state.loader.isLoad);
+  const [selectedItem, setSelectedItem] = useState("all");
 
   const router = useRouter();
   const { query } = router;
@@ -52,13 +56,43 @@ const Gallery = () => {
     (state) => state.category.galleryCategoryItem
   );
 
-  const handlePostGallery = async (type, file, action) => {
+  const postInBulk = async (type, file, action) => {
+    try {
+      let promiseArr = [];
+      for (let i = 0; i < 10; i++) {
+        const res = galleryPost(
+          {
+            type: type.toUpperCase(),
+            ...file,
+            category: query.id,
+            category_name: galleryCategoryItem.find(
+              (item) => item.id === parseInt(query.id)
+            )?.name,
+          },
+          token
+        );
+        promiseArr.push(res);
+      }
+      setisLoading(true);
+      const res = await Promise.all(promiseArr);
+
+      if (res[0].status === 201) {
+        dispatch(setIsLoad(!isLoad));
+        toast.success("Uploaded!");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handlePostGallery = async (type, data, title, action) => {
     try {
       setisLoading(true);
       const res = await galleryPost(
         {
           type: type.toUpperCase(),
-          ...file,
+          ...data,
+          title: title,
           category: query.id,
           category_name: galleryCategoryItem.find(
             (item) => item.id === parseInt(query.id)
@@ -66,17 +100,20 @@ const Gallery = () => {
         },
         token
       );
-
       if (res.code === "ERR_NETWORK") {
-        setIsShowGalleryUpload(false);
         dispatch(setIsLoad(!isLoad));
         toast.error("Network Error!");
+      }
+
+      if (res.code === "ERR_BAD_REQUEST" || res.code === "ERR_BAD_RESPONSE") {
+        dispatch(setIsLoad(!isLoad));
+        toast.error("Bad Request!");
       }
 
       if (res.status === 201) {
         setIsShowGalleryUpload(false);
         dispatch(setIsLoad(!isLoad));
-        action.resetForm();
+        action.resetForm({});
         toast.success("Uploaded!");
       }
     } catch (error) {
@@ -104,7 +141,7 @@ const Gallery = () => {
       if (res) {
         setIsShowCreateCategoryModal(false);
         dispatch(setIsLoad(!isLoad));
-        router.push(`/menu/${res.data.id}`);
+        router.push(`/gallery/${res.data.id}`);
       }
     } catch (error) {
       console.log(error);
@@ -166,21 +203,43 @@ const Gallery = () => {
     initialValues: {
       type: "image",
       file: "",
+      video_url: "",
+      title: "",
     },
 
     validationSchema: Yup.object({
+      title: Yup.string().required("Please Enter some value"),
       type: Yup.string().required("Please select it!"),
-      file: Yup.mixed()
-        .required()
-        .test(
-          "fileSize",
-          "File Too Large! Max File Size 50MB",
-          (file) => file?.size <= 50 * 1000 * 1000
-        ),
+      file: Yup.mixed().test(
+        "fileSize",
+        "File Too Large! Max File Size 50MB",
+        (file) => {
+          if (file && file?.image) {
+            return file?.image?.size <= 50 * 1000 * 1000;
+          } else {
+            return true;
+          }
+        }
+      ),
+
+      video_url: Yup.string().test("urlCheck", "Url is not Valid!", (val) => {
+        if (val) {
+          return /^https:\/\/www\.youtube\.com\/watch\?v=[a-zA-Z0-9-_]{11}$/.test(
+            val
+          );
+        } else {
+          return true;
+        }
+      }),
     }),
 
     onSubmit: (values, action) => {
-      handlePostGallery(values.type, values.file, action);
+      if (values.type === "image") {
+        handlePostGallery(values.type, values.file, values.title, action);
+      } else {
+        handlePostGallery(values.type, { video_url: values.video_url }, action);
+      }
+      // postInBulk(values.type, values.file, action);
     },
   });
 
@@ -189,23 +248,47 @@ const Gallery = () => {
       (item) => item.id === parseInt(query.id)
     )?.id;
     (async () => {
-      setisLoading(true);
-      if (query.id === "viewall") {
-        const res = await getAllGallery(1);
-        if (res.status === 200) {
-          setData(res.data);
-          setDeleteCategoryId(id);
+      if (query?.id && selectedItem === "all") {
+        setisLoading(true);
+        if (query.id === "viewall") {
+          const res = await getAllGallery(1);
+          if (res.status === 200) {
+            setData(res.data);
+            setDeleteCategoryId(id);
+          }
+        } else {
+          const res = await galleryGet(query.id, 1);
+          if (res.status === 200) {
+            setData(res.data);
+            setDeleteCategoryId(id);
+          }
         }
       } else {
-        const res = await galleryGet(query.id, 1);
-        if (res.status === 200) {
-          setData(res.data);
-          setDeleteCategoryId(id);
+        if (query.id) {
+          setisLoading(true);
+          if (query.id === "viewall") {
+            const res = await getFilterGalleryByType(selectedItem);
+            console.log(res);
+            if (res.status === 200) {
+              setData(res.data);
+              setDeleteCategoryId(id);
+            }
+          } else {
+            const res = await getFilterGalleryByTypeCategory(
+              query.id,
+              selectedItem
+            );
+            console.log(res);
+            if (res.status === 200) {
+              setData(res.data);
+              setDeleteCategoryId(id);
+            }
+          }
         }
       }
       setisLoading(false);
     })();
-  }, [galleryCategoryItem, isLoad]);
+  }, [galleryCategoryItem, isLoad, query.id, selectedItem]);
 
   if (query.id === "create") {
     return (
@@ -252,6 +335,12 @@ const Gallery = () => {
       <div className="header mb-4 py-2 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-[64px] z-[10] bg-white">
         <h2 className="text-xl font-[700]">Gallery</h2>
         <div className="flex gap-2">
+          <Dropdown
+            setSelectedItem={setSelectedItem}
+            selectedItem={selectedItem}
+            className="bg-red-400 rounded-full text-white flex p-1"
+          />
+
           <button
             onClick={() => setIsShowCreateCategoryModal((prev) => !prev)}
             className="flex items-center justify-center gap-2 bg-red-400 text-white py-1 px-2 rounded-full hover:bg-red-500"
@@ -341,6 +430,20 @@ const Gallery = () => {
         >
           <div id="create_category">
             <div className="mb-2 block flex-1">
+              <Label htmlFor="title" value="Enter Title" />
+              <TextInput
+                id="title"
+                type="text"
+                name="title"
+                onChange={formikGallery.handleChange}
+                onBlur={formikGallery.handleBlur}
+                placeholder="Title"
+              />
+              <span className="text-red-600 text-sm">
+                {formikGallery.errors ? formikGallery.errors.title : ""}
+              </span>
+            </div>
+            <div className="mb-2 block flex-1">
               <Label htmlFor="type" value="Select Your Type" />
               <Select
                 id="type"
@@ -369,27 +472,47 @@ const Gallery = () => {
               />
             </div>
 
-            <div className="mb-2 block flex-1">
-              <Label value="File" htmlFor="" />
-              <FileInput
-                id="file"
-                name={formikGallery.values.type}
-                accept={`${
-                  formikGallery.values.type === "image"
-                    ? ".jpg,.webp,.jpeg"
-                    : ".mp4,.mpeg,.mov,.avi"
-                }`}
-                required={true}
-                onChange={(e) =>
-                  formikGallery.setFieldValue("file", {
-                    [e.target.name]: e.target.files[0],
-                  })
-                }
-              />
-              <span className="text-red-600 text-sm">
-                {formikGallery.errors ? formikGallery.errors.file : ""}
-              </span>
-            </div>
+            {formikGallery.values.type === "image" ? (
+              <div className="mb-2 block flex-1">
+                <Label value="File" htmlFor="file" />
+                <FileInput
+                  id="file"
+                  name={formikGallery.values.type}
+                  accept={`${
+                    formikGallery.values.type === "image"
+                      ? ".jpg,.webp,.jpeg"
+                      : ".mp4,.mpeg,.mov,.avi"
+                  }`}
+                  required={true}
+                  onChange={(e) =>
+                    formikGallery.setFieldValue("file", {
+                      [e.target.name]: e.target.files[0],
+                    })
+                  }
+                />
+                <span className="text-red-600 text-sm">
+                  {formikGallery.errors ? formikGallery.errors.file : ""}
+                </span>
+              </div>
+            ) : (
+              <>
+                <div className="mb-2 block flex-1">
+                  <Label value="Youtube Video" htmlFor="byurl" />
+                  <TextInput
+                    id="byurl"
+                    type="url"
+                    name={formikGallery.values.type}
+                    onChange={(e) =>
+                      formikGallery.setFieldValue("video_url", e.target.value)
+                    }
+                    placeholder="https://www.youtube.com/watch?v=sNzw23FETUI"
+                  />
+                  <span className="text-red-600 text-sm">
+                    {formikGallery.errors ? formikGallery.errors.video_url : ""}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </ModalComponent>
       </div>
@@ -411,7 +534,7 @@ const Gallery = () => {
                       className=" col-span-1 p-2"
                       key={new Date().getTime() + 1 + index}
                     >
-                      <div className="relative h-72 w-72 mx-auto">
+                      <div className="relative h-72 w-72 mx-auto hover:shadow-lg hover:scale-105 transition-all">
                         <span
                           className="absolute right-3 z-[9] top-3 bg-white shadow-xl rounded-full p-2 cursor-pointer text-2xl hover:text-gray-700"
                           onClick={() => {
@@ -427,7 +550,7 @@ const Gallery = () => {
                         </span>
                         <Image
                           src={`${process.env.NEXT_PUBLIC_APIURL}${
-                            item.image ? item.image : ""
+                            item.image_thumbnail ? item.image_thumbnail : ""
                           }`}
                           alt="cake"
                           fill
@@ -458,11 +581,9 @@ const Gallery = () => {
                         </span>
 
                         <Video
-                          src={`${process.env.NEXT_PUBLIC_APIURL}${
-                            item.video ? item.video : ""
-                          }`}
+                          src={item?.video_url || ""}
+                          videoThumbnail={item?.yt_thumbnail || ""}
                           className="aspect-square"
-                          controls
                         />
                       </div>
                     </div>
@@ -476,9 +597,9 @@ const Gallery = () => {
 
           <div className="pagination py-2 px-4 sm:px-6 lg:px-8 flex justify-center  bg-white w-full shadow-sm z-[11]">
             <Pagination
-              activePage={parseInt(data.current_page)}
+              activePage={parseInt(data?.current_page) || 1}
               itemsCountPerPage={9}
-              totalItemsCount={data.total_gallerys}
+              totalItemsCount={data?.total_gallerys || 1}
               pageRangeDisplayed={5}
               onChange={handlePagination}
               innerClass="flex gap-5"

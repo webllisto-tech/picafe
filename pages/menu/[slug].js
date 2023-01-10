@@ -47,6 +47,25 @@ const Menu = () => {
   const dispatch = useDispatch();
   const router = useRouter();
 
+  const postInBulk = async (data, token) => {
+    try {
+      let promiseArr = [];
+      for (let i = 0; i < 25; i++) {
+        const res = await menuItemPost(data, token);
+        promiseArr.push(res);
+      }
+      setIsLoading(true);
+      const res = await Promise.all(promiseArr);
+
+      if (res[0].status === 201) {
+        dispatch(setIsLoad(!isLoad));
+        toast.success("Uploaded!");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const handleCreateCategory = async (category) => {
     dispatch(setIsLoad(true));
     const res = await categoryPost(category.toLowerCase(), token);
@@ -155,6 +174,7 @@ const Menu = () => {
     }),
     onSubmit: (values, action) => {
       handleCreateItem({ ...values, category: query.slug }, action);
+      // postInBulk({ ...values, category: query.slug }, token);
     },
   });
 
@@ -469,8 +489,8 @@ const Menu = () => {
         ) : (
           <>
             <div className="items_container grid grid-cols-12 gap-8 py-2 px-4 sm:px-6 lg:px-8">
-              {menuItems.data?.length > 0 ? (
-                menuItems.data.map((item, index) => {
+              {menuItems?.data?.length > 0 ? (
+                menuItems?.data.map((item, index) => {
                   return (
                     <Card
                       key={new Date().getTime() + index}
@@ -496,9 +516,9 @@ const Menu = () => {
 
             <div className="pagination py-2 px-4 sm:px-6 lg:px-8 flex justify-center  bg-white w-full shadow-sm z-[11]">
               <Pagination
-                activePage={parseInt(menuItems?.current_page?.split("")[0])}
+                activePage={parseInt(menuItems?.current_page?.split("")[0]) || 0}
                 itemsCountPerPage={9}
-                totalItemsCount={menuItems?.total_special_menu}
+                totalItemsCount={menuItems?.total_special_menu || 0}
                 pageRangeDisplayed={5}
                 onChange={handlePagination}
                 innerClass="flex gap-5"

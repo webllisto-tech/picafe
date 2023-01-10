@@ -43,8 +43,8 @@ function Dashboard() {
             </>
           ) : (
             <Table.Body className="divide-y">
-              {contactFetchData.data?.length > 0 ? (
-                contactFetchData.data.map((item, index) => {
+              {contactFetchData?.data?.length > 0 ? (
+                contactFetchData?.data.slice(0, 5).map((item, index) => {
                   return (
                     <Table.Row
                       key={new Date().getTime() + index + 1}

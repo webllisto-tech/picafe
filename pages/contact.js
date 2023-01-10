@@ -7,6 +7,7 @@ import Pagination from "react-js-pagination";
 const Contact = () => {
   const [contactFetchData, setContactFetchData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+
   const token = useSelector((state) => state.auth.token);
 
   useEffect(() => {
@@ -20,11 +21,9 @@ const Contact = () => {
 
   const handlePagination = async (page) => {
     setIsLoading(true);
-    if (query.slug) {
-      const res = await contactGet(token, page);
-      setContactFetchData(res.data);
-      setIsLoading(false);
-    }
+    const res = await contactGet(token, page);
+    setContactFetchData(res.data);
+    setIsLoading(false);
   };
 
   if (isLoading) {
@@ -85,7 +84,12 @@ const Contact = () => {
                       key={new Date().getTime() + index + 1}
                       className="bg-white dark:border-gray-700 dark:bg-gray-800"
                     >
-                      <Table.Cell>{index + 1}</Table.Cell>
+                      <Table.Cell>
+                        {parseInt(contactFetchData.current_page) * 6 -
+                          6 +
+                          index +
+                          1}
+                      </Table.Cell>
                       <Table.Cell>{item.name}</Table.Cell>
                       <Table.Cell>{item.phone}</Table.Cell>
                       <Table.Cell>{item.email}</Table.Cell>

@@ -6,7 +6,12 @@ import Image from "next/image";
 import { HiOutlineHome, HiOutlineUserGroup } from "react-icons/hi";
 import { RxDashboard } from "react-icons/rx";
 import { TfiAngleDown } from "react-icons/tfi";
-import { MdRestaurantMenu, MdPermContactCalendar } from "react-icons/md";
+import {
+  MdRestaurantMenu,
+  MdPermContactCalendar,
+  MdOutlineLogout,
+} from "react-icons/md";
+import { VscSymbolKeyword } from "react-icons/vsc";
 import { TbListDetails } from "react-icons/tb";
 import { RiGalleryFill } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
@@ -22,6 +27,7 @@ import { toast } from "react-toastify";
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const location = useRouter();
   const [pathname, setPathName] = useState(location.pathname);
+  const [openTab, setopenTab] = useState("");
   const [category, setCategory] = useState([]);
   const [galleryCategory, setGalleryCategory] = useState([]);
   const isLoad = useSelector((state) => state.loader.isLoad);
@@ -35,6 +41,15 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const [sidebarExpanded, setSidebarExpanded] = useState(
     storedSidebarExpanded === null ? false : storedSidebarExpanded === "true"
   );
+
+  const handleTab = (tab) => {
+    setopenTab(tab === openTab ? "" : tab);
+  };
+
+  const handleLogOut = () => {
+    dispatch(removeToken());
+    router.push("/login");
+  };
 
   useEffect(() => {
     setPathName(location.pathname);
@@ -53,7 +68,6 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         dispatch(setCategoryItem(categoryData.data));
         dispatch(setGalleryCategoryItem(galleryCategoryData.data));
       }
-      console.log(categoryData);
       if (categoryData?.response?.status === 401) {
         toast.info("Session Expired!");
         dispatch(removeToken());
@@ -160,9 +174,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
               >
                 •••
               </span>
-              <span className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                Pages
-              </span>
+              <span className="lg:hidden lg:sidebar-expanded:block 2xl:block"></span>
             </h3>
             <ul className="mt-3">
               {/* Dashboard */}
@@ -171,6 +183,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 className={`px-3 py-2 rounded-sm mb-0.5 last:mb-0 ${
                   pathname === "/" && "bg-slate-900"
                 }`}
+                onClick={() => handleTab("")}
               >
                 <Link
                   href="/"
@@ -200,7 +213,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                         onClick={(e) => {
                           e.preventDefault();
                           sidebarExpanded
-                            ? handleClick()
+                            ? handleTab("path1")
                             : setSidebarExpanded(true);
                         }}
                       >
@@ -213,13 +226,19 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                           </div>
                           <div className="flex shrink-0 ml-2">
                             <TfiAngleDown
-                              className={`${open && "rotate-180"}`}
+                              className={`${
+                                openTab === "path1" ? "rotate-180" : ""
+                              }`}
                             />
                           </div>
                         </div>
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                        <ul className={`pl-9 mt-1 ${!open && "hidden"}`}>
+                        <ul
+                          className={`pl-9 mt-1 ${
+                            openTab === "path1" ? "" : "hidden"
+                          }`}
+                        >
                           <li className="mb-1 last:mb-0">
                             <Link
                               href="/home/banner-uploads"
@@ -253,6 +272,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 className={`px-3 py-2 rounded-sm mb-0.5 last:mb-0 ${
                   pathname === "/about" && "bg-slate-900"
                 }`}
+                onClick={() => handleTab("")}
               >
                 <Link
                   href="/about"
@@ -282,7 +302,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                         onClick={(e) => {
                           e.preventDefault();
                           sidebarExpanded
-                            ? handleClick()
+                            ? handleTab("path2")
                             : setSidebarExpanded(true);
                         }}
                       >
@@ -295,13 +315,19 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                           </div>
                           <div className="flex shrink-0 ml-2">
                             <TfiAngleDown
-                              className={`${open && "rotate-180"}`}
+                              className={`${
+                                openTab === "path2" ? "rotate-180" : ""
+                              }`}
                             />
                           </div>
                         </div>
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                        <ul className={`pl-9 mt-1 ${!open && "hidden"}`}>
+                        <ul
+                          className={`pl-9 mt-1 ${
+                            openTab === "path2" ? "" : "hidden"
+                          }`}
+                        >
                           {category && category?.length > 0 ? (
                             category.map((item, index) => {
                               return (
@@ -340,25 +366,6 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
               </SidebarLinkGroup>
 
               {/* Gallery */}
-              {/* <li
-                className={`px-3 py-2 rounded-sm mb-0.5 last:mb-0 ${
-                  pathname.includes("/gallery") && "bg-slate-900"
-                }`}
-              >
-                <Link
-                  href="/gallery"
-                  className={`block text-slate-200 hover:text-white truncate transition duration-150 ${
-                    pathname.includes("/gallery") && "hover:text-slate-200"
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <RiGalleryFill className="shrink-0 h-6 w-6" />
-                    <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Gallery
-                    </span>
-                  </div>
-                </Link>
-              </li> */}
 
               <SidebarLinkGroup activecondition={pathname.includes("/gallery")}>
                 {(handleClick, open) => {
@@ -373,7 +380,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                         onClick={(e) => {
                           e.preventDefault();
                           sidebarExpanded
-                            ? handleClick()
+                            ? handleTab("path3")
                             : setSidebarExpanded(true);
                         }}
                       >
@@ -386,13 +393,19 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                           </div>
                           <div className="flex shrink-0 ml-2">
                             <TfiAngleDown
-                              className={`${open && "rotate-180"}`}
+                              className={`${
+                                openTab === "path3" ? "rotate-180" : ""
+                              }`}
                             />
                           </div>
                         </div>
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                        <ul className={`pl-9 mt-1 ${!open && "hidden"}`}>
+                        <ul
+                          className={`pl-9 mt-1 ${
+                            openTab === "path3" ? "" : "hidden"
+                          }`}
+                        >
                           {galleryCategory && galleryCategory?.length > 0 ? (
                             <>
                               <li className="mb-1 last:mb-0">
@@ -447,6 +460,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 className={`px-3 py-2 rounded-sm mb-0.5 last:mb-0 ${
                   pathname.includes("/contact") && "bg-slate-900"
                 }`}
+                onClick={() => handleTab("")}
               >
                 <Link
                   href="/contact"
@@ -467,6 +481,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 className={`px-3 py-2 rounded-sm mb-0.5 last:mb-0 ${
                   pathname.includes("/footer") && "bg-slate-900"
                 }`}
+                onClick={() => handleTab("")}
               >
                 <Link
                   href="/footer"
@@ -481,6 +496,43 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     </span>
                   </div>
                 </Link>
+              </li>
+
+              <li
+                className={`px-3 py-2 rounded-sm mb-0.5 last:mb-0 ${
+                  pathname.includes("/meta") && "bg-slate-900"
+                }`}
+                onClick={() => handleTab("")}
+              >
+                <Link
+                  href="/meta"
+                  className={`block text-slate-200 hover:text-white truncate transition duration-150 ${
+                    pathname.includes("/meta") && "hover:text-slate-200"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <VscSymbolKeyword className="shrink-0 h-6 w-6" />
+                    <span className="text-sm capitalize font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                      meta
+                    </span>
+                  </div>
+                </Link>
+              </li>
+
+              <li
+                className={`px-3 py-2 rounded-sm mb-0.5 last:mb-0 cursor-pointer`}
+                onClick={() => handleLogOut("")}
+              >
+                <div
+                  className={`block text-slate-200 hover:text-white truncate transition duration-150`}
+                >
+                  <div className="flex items-center">
+                    <MdOutlineLogout className="shrink-0 h-6 w-6" />
+                    <span className="text-sm capitalize font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                      Logout
+                    </span>
+                  </div>
+                </div>
               </li>
             </ul>
           </div>

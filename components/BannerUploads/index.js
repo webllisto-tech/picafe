@@ -157,8 +157,8 @@ const BannerUploads = () => {
       </div>
 
       <div className="banner_uploads_container px-4 sm:px-6 lg:px-8 grid grid-cols-12 gap-8">
-        {bannerUploadGetData.length > 0 ? (
-          bannerUploadGetData.map((item, index) => {
+        {bannerUploadGetData?.length > 0 ? (
+          bannerUploadGetData?.map((item, index) => {
             return (
               <Card
                 key={new Date().getTime() + index}

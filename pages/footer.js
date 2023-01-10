@@ -24,7 +24,6 @@ const Footer = () => {
       contact: "",
       facebook: "",
       instagram: "",
-      twitter: "",
     },
 
     validationSchema: Yup.object({
@@ -39,13 +38,7 @@ const Footer = () => {
         .required("Required Field"),
       instagram: Yup.string()
         .matches(
-          /((https?):\/\/)?(www.)?[a-z0-9]+(\.[a-z]{2,}){1,3}(#?\/?[a-zA-Z0-9#]+)*\/?(\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$/,
-          "Enter correct url!"
-        )
-        .required("Required Field"),
-      twitter: Yup.string()
-        .matches(
-          /((https?):\/\/)?(www.)?[a-z0-9]+(\.[a-z]{2,}){1,3}(#?\/?[a-zA-Z0-9#]+)*\/?(\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$/,
+          /((https?):\/\/)?(www.)?[a-z0-9]+(\.[a-z]{2,}){1,3}(#?\/?[a-zA-Z0-9_#]+)*\/?(\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$/,
           "Enter correct url!"
         )
         .required("Required Field"),
@@ -115,20 +108,6 @@ const Footer = () => {
           />
           <span className="text-red-600 text-sm font-semibold">
             {errors ? errors.facebook : ""}
-          </span>
-        </div>
-        <div className="col-span-4">
-          <h2 className="text-base">Twitter</h2>
-          <TextInput
-            value={values.twitter}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            name="twitter"
-            placeholder="Twitter Url"
-            type="url"
-          />
-          <span className="text-red-600 text-sm font-semibold">
-            {errors ? errors.twitter : ""}
           </span>
         </div>
         <div className="col-span-4">

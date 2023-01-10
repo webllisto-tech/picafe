@@ -16,7 +16,12 @@ const Layout = ({ children }) => {
       router.push("/login");
       return <></>;
     }
-    return <>{children}</>;
+    return (
+      <>
+        {children}
+        <ToastContainer />
+      </>
+    );
   }
 
   return (

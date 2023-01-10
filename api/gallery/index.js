@@ -48,3 +48,25 @@ export const getAllGallery = async (page) => {
     return error;
   }
 };
+
+export const getFilterGalleryByTypeCategory = async (category, type) => {
+  try {
+    const res = await axios.get(
+      `${apiUrl}/search-gallery/?category=${category}&type=${type}`
+    );
+
+    return res;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const getFilterGalleryByType = async (type) => {
+  try {
+    const res = await axios.get(`${apiUrl}/search-gallery/?type=${type}`);
+
+    return res;
+  } catch (error) {
+    return error;
+  }
+};
