@@ -18,11 +18,15 @@ export const footerGet = async (token) => {
 
 export const footerPost = async (token, data) => {
   try {
-    const res = await axios.post(`${apiUrl}/footer/`, data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const res = await axios.post(
+      `${apiUrl}/footer/`,
+      { ...data, "contact": JSON.stringify(data?.contact) },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
     return res;
   } catch (error) {

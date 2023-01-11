@@ -85,8 +85,8 @@ const Contact = () => {
                       className="bg-white dark:border-gray-700 dark:bg-gray-800"
                     >
                       <Table.Cell>
-                        {parseInt(contactFetchData.current_page) * 6 -
-                          6 +
+                        {parseInt(contactFetchData.current_page) * 10 -
+                          10 +
                           index +
                           1}
                       </Table.Cell>
@@ -118,7 +118,7 @@ const Contact = () => {
 
         <Pagination
           activePage={parseInt(contactFetchData?.current_page)}
-          itemsCountPerPage={6}
+          itemsCountPerPage={10}
           totalItemsCount={contactFetchData?.total_contacts}
           pageRangeDisplayed={5}
           onChange={handlePagination}
