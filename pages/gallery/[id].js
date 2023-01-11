@@ -40,7 +40,6 @@ const Gallery = () => {
   const [isShowDeleteModal, setIsShowDeleteModal] = useState(false);
   const [isShowCreateCategoryModal, setIsShowCreateCategoryModal] =
     useState(false);
-  const [category, setCategory] = useState("");
   const [data, setData] = useState([]);
   const [isLoading, setisLoading] = useState(false);
   const [activeItemId, setActiveItemId] = useState("");
@@ -49,41 +48,40 @@ const Gallery = () => {
   const token = useSelector((state) => state.auth.token);
   const isLoad = useSelector((state) => state.loader.isLoad);
   const [selectedItem, setSelectedItem] = useState("all");
-
   const router = useRouter();
   const { query } = router;
   const galleryCategoryItem = useSelector(
     (state) => state.category.galleryCategoryItem
   );
 
-  const postInBulk = async (type, file, action) => {
-    try {
-      let promiseArr = [];
-      for (let i = 0; i < 10; i++) {
-        const res = galleryPost(
-          {
-            type: type.toUpperCase(),
-            ...file,
-            category: query.id,
-            category_name: galleryCategoryItem.find(
-              (item) => item.id === parseInt(query.id)
-            )?.name,
-          },
-          token
-        );
-        promiseArr.push(res);
-      }
-      setisLoading(true);
-      const res = await Promise.all(promiseArr);
+  // const postInBulk = async (type, file, action) => {
+  //   try {
+  //     let promiseArr = [];
+  //     for (let i = 0; i < 10; i++) {
+  //       const res = galleryPost(
+  //         {
+  //           type: type.toUpperCase(),
+  //           ...file,
+  //           category: query.id,
+  //           category_name: galleryCategoryItem.find(
+  //             (item) => item.id === parseInt(query.id)
+  //           )?.name,
+  //         },
+  //         token
+  //       );
+  //       promiseArr.push(res);
+  //     }
+  //     setisLoading(true);
+  //     const res = await Promise.all(promiseArr);
 
-      if (res[0].status === 201) {
-        dispatch(setIsLoad(!isLoad));
-        toast.success("Uploaded!");
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  //     if (res[0].status === 201) {
+  //       dispatch(setIsLoad(!isLoad));
+  //       toast.success("Uploaded!");
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
   const handlePostGallery = async (type, data, title, action) => {
     try {
@@ -155,8 +153,8 @@ const Gallery = () => {
       if (res.status === 204) {
         dispatch(setIsLoad(!isLoad));
         setIsShowCreateCategoryModal(false);
-        if (galleryCategoryItem.length > 0) {
-          router.push(`/gallery/${galleryCategoryItem[0].id}`);
+        if (galleryCategoryItem.length > 1) {
+          router.push(`/gallery/viewall`);
         } else {
           router.push(`/gallery/create`);
         }
@@ -247,47 +245,50 @@ const Gallery = () => {
     const id = galleryCategoryItem.find(
       (item) => item.id === parseInt(query.id)
     )?.id;
-    (async () => {
-      if (query?.id && selectedItem === "all") {
-        setisLoading(true);
-        if (query.id === "viewall") {
-          const res = await getAllGallery(1);
-          if (res.status === 200) {
-            setData(res.data);
-            setDeleteCategoryId(id);
-          }
-        } else {
-          const res = await galleryGet(query.id, 1);
-          if (res.status === 200) {
-            setData(res.data);
-            setDeleteCategoryId(id);
-          }
-        }
-      } else {
-        if (query.id) {
+    if (query?.id !== "create") {
+      (async () => {
+        if (query?.id && selectedItem === "all") {
           setisLoading(true);
           if (query.id === "viewall") {
-            const res = await getFilterGalleryByType(selectedItem);
-            console.log(res);
+            const res = await getAllGallery(1);
             if (res.status === 200) {
               setData(res.data);
               setDeleteCategoryId(id);
             }
           } else {
-            const res = await getFilterGalleryByTypeCategory(
-              query.id,
-              selectedItem
-            );
-            console.log(res);
+            const res = await galleryGet(query.id, 1);
             if (res.status === 200) {
               setData(res.data);
               setDeleteCategoryId(id);
             }
           }
+        } else {
+          if (query.id) {
+            setisLoading(true);
+            if (query.id === "viewall") {
+              const res = await getFilterGalleryByType(selectedItem);
+              console.log(res);
+              if (res.status === 200) {
+                setData(res.data);
+                setDeleteCategoryId(id);
+              }
+            } else {
+              const res = await getFilterGalleryByTypeCategory(
+                query.id,
+                selectedItem
+              );
+              console.log(res);
+              if (res.status === 200) {
+                setData(res.data);
+                setDeleteCategoryId(id);
+              }
+            }
+          }
         }
-      }
-      setisLoading(false);
-    })();
+
+        setisLoading(false);
+      })();
+    }
   }, [galleryCategoryItem, isLoad, query.id, selectedItem]);
 
   if (query.id === "create") {
@@ -306,21 +307,22 @@ const Gallery = () => {
             popup={false}
             isShow={isShowCreateCategoryModal}
             onClose={setIsShowCreateCategoryModal}
-            onSubmit={handleCreateCategory}
+            onSubmit={formikCategory.handleSubmit}
             isLoading={isLoading}
             heading="Create Category"
           >
             <div id="create_category">
               <div className="mb-2 block flex-1">
-                <Label value="Category" htmlFor="name" />
+                <Label value="Category" htmlFor="category" />
                 <TextInput
-                  id="name"
+                  id="catgory"
                   type="text"
                   name="category"
                   placeholder="Breakfast"
-                  value={category}
+                  value={formikCategory.values.category}
                   required={true}
-                  onChange={(e) => setCategory(e.target.value)}
+                  onChange={formikCategory.handleChange}
+                  onBlur={formikCategory.handleBlur}
                 />
               </div>
             </div>
